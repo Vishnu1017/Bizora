@@ -1,0 +1,128 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "owner";
+    }
+
+    /// USERS
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == userId || isAdmin()
+      );
+      
+      allow list: if isAuthenticated();
+      
+      allow update: if isAuthenticated() && (
+        request.auth.uid == userId || isAdmin()
+      );
+      
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+
+    /// OWNER REQUESTS
+    match /owner_requests/{doc} {
+      allow create: if isAuthenticated() 
+        && request.resource.data.userId == request.auth.uid;
+
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid
+        || isAdmin()
+      );
+
+      allow list: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid
+        || isAdmin()
+      );
+
+      allow update: if isAuthenticated() && isAdmin();
+
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+
+    /// PRODUCTS
+    match /products/{doc} {
+      allow read: if true;
+      
+      allow create: if isAuthenticated()
+        && isOwner()
+        && request.resource.data.ownerId == request.auth.uid;
+
+      allow update, delete: if isAuthenticated()
+        && (
+          resource.data.ownerId == request.auth.uid
+          || isAdmin()
+        );
+    }
+
+    /// ORDERS - FIXED VERSION
+    match /orders/{doc} {
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid;
+
+      // For reading individual orders
+      allow read: if isAuthenticated()
+        && (
+          resource.data.userId == request.auth.uid
+          || isAdmin()
+          || (isOwner() && resource.data.shopOwnerId == request.auth.uid)
+        );
+
+      // For listing/querying orders - FIXED: Admins can list all, owners can list their shop orders
+      allow list: if isAuthenticated() 
+        && (isAdmin() || isOwner());
+
+      // For queries with specific filters
+      allow get: if isAuthenticated()
+        && (
+          resource.data.userId == request.auth.uid
+          || isAdmin()
+          || (isOwner() && resource.data.shopOwnerId == request.auth.uid)
+        );
+
+      allow update: if isAuthenticated()
+        && (isAdmin() || isOwner());
+    }
+
+    /// SHOPS - ADD THIS SECTION (it's missing in your rules)
+    match /shops/{doc} {
+      allow read: if isAuthenticated() && (
+        resource.data.ownerId == request.auth.uid
+        || isAdmin()
+      );
+      
+      allow list: if isAuthenticated() && (isAdmin() || isOwner());
+      
+      allow create: if isAuthenticated() && isOwner();
+      
+      allow update, delete: if isAuthenticated() && (
+        resource.data.ownerId == request.auth.uid
+        || isAdmin()
+      );
+    }
+    
+    /// AUDIT LOGS (if you're using them)
+    match /auditLogs/{doc} {
+      allow read, write: if isAuthenticated() && isAdmin();
+    }
+  }
+}

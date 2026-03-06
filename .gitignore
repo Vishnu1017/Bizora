@@ -1,0 +1,15 @@
+# Flutter / Dart
+build/
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# IDE
+.idea/
+.DS_Store
+
+# Build outputs
+*.apk
+*.aab
+*.dill

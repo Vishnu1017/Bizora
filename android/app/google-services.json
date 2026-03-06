@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "758451518573",
+    "project_id": "bizora-68ec1",
+    "storage_bucket": "bizora-68ec1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:758451518573:android:bd61af163dbab7d4075364",
+        "android_client_info": {
+          "package_name": "com.bizora.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "758451518573-mgla74mhk3lqi6i87hrs254ta4761erk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bizora.app",
+            "certificate_hash": "1fc36dc40f8adb651f1178a68e8db1415f28c607"
+          }
+        },
+        {
+          "client_id": "758451518573-nr8qqc8mf14tsognu7v0l3s6cj20jm01.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwoZbEZhIRg7pc_I_ZFq2JBbM_mq-Li-s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "758451518573-nr8qqc8mf14tsognu7v0l3s6cj20jm01.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "758451518573-kli9326cj2n2092o1d4i0b7s0talca6j.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bizora"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

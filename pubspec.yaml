@@ -60,6 +60,8 @@ dependencies:
   local_auth: ^3.0.1
   path: ^1.9.1
   shared_preferences: ^2.5.4
+  fuzzy: ^0.5.1
+  tuple: ^2.0.2
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1

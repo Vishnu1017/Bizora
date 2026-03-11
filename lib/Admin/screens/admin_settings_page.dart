@@ -1003,7 +1003,6 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
                   style: TextStyle(
                     fontSize: isSmallPhone ? 10 : 12,
                     color: Colors.grey.shade600,
-                    fontStyle: FontStyle.italic,
                   ),
                   child: const Text(
                     'Leave password fields empty if you don\'t want to change it',

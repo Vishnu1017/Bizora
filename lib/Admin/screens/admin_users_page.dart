@@ -2727,10 +2727,6 @@ class _AdminUsersPageState extends State<AdminUsersPage>
         return Transform.scale(
           scale: 0.9 + (0.1 * value),
           child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: padding,
-              vertical: verticalPadding,
-            ),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Colors.deepPurple, Colors.purple],
@@ -2742,125 +2738,143 @@ class _AdminUsersPageState extends State<AdminUsersPage>
                   smallestPhone: 16,
                 ),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.deepPurple.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
             ),
-            child: Row(
-              children: [
-                // Selection count with animation
-                TweenAnimationBuilder<int>(
-                  duration: const Duration(milliseconds: 200),
-                  tween: IntTween(begin: 0, end: _selectedUsers.length),
-                  builder: (context, count, child) {
-                    return Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: padding * 0.6,
-                        vertical: padding * 0.3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(
-                          _getResponsiveValue(
-                            base: 30,
-                            smallPhone: 25,
-                            smallestPhone: 20,
-                          ),
-                        ),
-                      ),
-                      child: Text(
-                        '$count selected',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: fontSize,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                SizedBox(width: padding * 0.8),
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    child: Row(
-                      children: [
-                        _buildActionChip(
-                          label: "Activate all",
-                          icon: Icons.check_circle_rounded,
-                          color: Colors.green,
-                          onPressed: () => _batchOperation(
-                            operation: 'Activate',
-                            updates: {
-                              'isActive': true,
-                              'statusUpdatedAt': FieldValue.serverTimestamp(),
-                              'statusUpdatedBy':
-                                  FirebaseAuth.instance.currentUser?.uid,
-                            },
-                            successMessage: 'Activated',
-                          ),
-                          fontSize: fontSize,
-                          iconSize: iconSize,
-                          padding: padding * 0.4,
-                        ),
-                        SizedBox(width: padding * 0.4),
-                        _buildActionChip(
-                          label: "Suspend all",
-                          icon: Icons.pause_circle_rounded,
-                          color: Colors.orange,
-                          onPressed: () => _batchOperation(
-                            operation: 'Suspend',
-                            updates: {
-                              'isActive': false,
-                              'statusUpdatedAt': FieldValue.serverTimestamp(),
-                              'statusUpdatedBy':
-                                  FirebaseAuth.instance.currentUser?.uid,
-                            },
-                            successMessage: 'Suspended',
-                          ),
-                          fontSize: fontSize,
-                          iconSize: iconSize,
-                          padding: padding * 0.4,
-                        ),
-                        SizedBox(width: padding * 0.4),
-                        _buildActionChip(
-                          label: "Make owners",
-                          icon: Icons.store_rounded,
-                          color: Colors.amber,
-                          onPressed: () => _batchOperation(
-                            operation: 'Make owners',
-                            updates: {
-                              'role': 'owner',
-                              'roleUpdatedAt': FieldValue.serverTimestamp(),
-                              'roleUpdatedBy':
-                                  FirebaseAuth.instance.currentUser?.uid,
-                            },
-                            successMessage: 'Updated',
-                          ),
-                          fontSize: fontSize,
-                          iconSize: iconSize,
-                          padding: padding * 0.4,
-                        ),
-                        SizedBox(width: padding * 0.4),
-                        _buildActionChip(
-                          label: "Clear selection",
-                          icon: Icons.clear_rounded,
-                          color: Colors.white,
-                          onPressed: _toggleSelectionMode,
-                          fontSize: fontSize,
-                          iconSize: iconSize,
-                          padding: padding * 0.4,
-                        ),
-                      ],
-                    ),
+            padding: const EdgeInsets.all(2), // border thickness
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: padding,
+                vertical: verticalPadding,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white, // inside background
+                borderRadius: BorderRadius.circular(
+                  _getResponsiveValue(
+                    base: 18,
+                    smallPhone: 16,
+                    smallestPhone: 14,
                   ),
                 ),
-              ],
+              ),
+              child: Row(
+                children: [
+                  // Selection count with animation
+                  TweenAnimationBuilder<int>(
+                    duration: const Duration(milliseconds: 200),
+                    tween: IntTween(begin: 0, end: _selectedUsers.length),
+                    builder: (context, count, child) {
+                      return Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: padding * 0.6,
+                          vertical: padding * 0.3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.deepPurple.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(
+                            _getResponsiveValue(
+                              base: 30,
+                              smallPhone: 25,
+                              smallestPhone: 20,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          '$count selected',
+                          style: TextStyle(
+                            color: Colors.deepPurple,
+                            fontWeight: FontWeight.w600,
+                            fontSize: fontSize,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  SizedBox(width: padding * 0.8),
+
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: Row(
+                        children: [
+                          _buildActionChip(
+                            label: "Activate all",
+                            icon: Icons.check_circle_rounded,
+                            color: Colors.green,
+                            onPressed: () => _batchOperation(
+                              operation: 'Activate',
+                              updates: {
+                                'isActive': true,
+                                'statusUpdatedAt': FieldValue.serverTimestamp(),
+                                'statusUpdatedBy':
+                                    FirebaseAuth.instance.currentUser?.uid,
+                              },
+                              successMessage: 'Activated',
+                            ),
+                            fontSize: fontSize,
+                            iconSize: iconSize,
+                            padding: padding * 0.4,
+                          ),
+
+                          SizedBox(width: padding * 0.4),
+
+                          _buildActionChip(
+                            label: "Suspend all",
+                            icon: Icons.pause_circle_rounded,
+                            color: Colors.orange,
+                            onPressed: () => _batchOperation(
+                              operation: 'Suspend',
+                              updates: {
+                                'isActive': false,
+                                'statusUpdatedAt': FieldValue.serverTimestamp(),
+                                'statusUpdatedBy':
+                                    FirebaseAuth.instance.currentUser?.uid,
+                              },
+                              successMessage: 'Suspended',
+                            ),
+                            fontSize: fontSize,
+                            iconSize: iconSize,
+                            padding: padding * 0.4,
+                          ),
+
+                          SizedBox(width: padding * 0.4),
+
+                          _buildActionChip(
+                            label: "Make Owners",
+                            icon: Icons.store_rounded,
+                            color: Colors.amber,
+                            onPressed: () => _batchOperation(
+                              operation: 'Make owners',
+                              updates: {
+                                'role': 'owner',
+                                'roleUpdatedAt': FieldValue.serverTimestamp(),
+                                'roleUpdatedBy':
+                                    FirebaseAuth.instance.currentUser?.uid,
+                              },
+                              successMessage: 'Updated',
+                            ),
+                            fontSize: fontSize,
+                            iconSize: iconSize,
+                            padding: padding * 0.4,
+                          ),
+
+                          SizedBox(width: padding * 0.4),
+
+                          _buildActionChip(
+                            label: "Clear Selection",
+                            icon: Icons.clear_rounded,
+                            color: Colors.red,
+                            onPressed: _toggleSelectionMode,
+                            fontSize: fontSize,
+                            iconSize: iconSize,
+                            padding: padding * 0.4,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -3638,15 +3652,6 @@ class _AdminUsersPageState extends State<AdminUsersPage>
             color: isSelected ? Colors.deepPurple : Colors.grey.shade300,
             width: 2,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.deepPurple.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
         ),
         child: isSelected
             ? Icon(

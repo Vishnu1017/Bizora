@@ -49,7 +49,7 @@ class _AdminUsersPageState extends State<AdminUsersPage>
   String _selectedSortField = 'displayName';
   bool _sortAscending = true;
 
-  // View mode with responsive grid calculations
+  // ADD THESE NEW STATE VARIABLES FOR ADVANCED FILTERS
   bool _isGridView = false;
   int _gridCrossAxisCount = 1;
   // ignore: unused_field
@@ -319,20 +319,34 @@ class _AdminUsersPageState extends State<AdminUsersPage>
     setState(() => _isLoadingMore = true);
 
     try {
-      Query<Map<String, dynamic>> query = FirebaseFirestore.instance
-          .collection('users')
-          .orderBy('createdAt', descending: true)
-          .limit(_pageSize);
+      // Start with base query
+      Query<Map<String, dynamic>> query = FirebaseFirestore.instance.collection(
+        'users',
+      );
 
-      // Apply filters
+      // Apply filters FIRST (before sorting)
+
+      // Apply role filter
       if (_selectedRoleFilter != 'all') {
         query = query.where('role', isEqualTo: _selectedRoleFilter);
       }
 
+      // Apply status filter
       if (_selectedStatusFilter != 'all') {
         final isActive = _selectedStatusFilter == 'active';
         query = query.where('isActive', isEqualTo: isActive);
       }
+
+      // THEN apply sorting - this must come after filters
+      // IMPORTANT: For createdAt field:
+      // - When _sortAscending = true: oldest first (ascending)
+      // - When _sortAscending = false: latest first (descending)
+      query = query.orderBy(
+        _selectedSortField,
+        descending: !_sortAscending, // When false, descending = newest first
+      );
+
+      query = query.limit(_pageSize);
 
       // Apply pagination
       if (!reset && _lastDocument != null) {
@@ -1798,7 +1812,7 @@ class _AdminUsersPageState extends State<AdminUsersPage>
       valueListenable: _aiSearchResults,
       builder: (context, searchResults, child) {
         // Use search results if available, otherwise use all docs with filters
-        final docs = searchResults.isNotEmpty
+        List<DocumentSnapshot> docs = searchResults.isNotEmpty
             ? searchResults
             : _filterDocs(_allDocs);
 
@@ -1926,26 +1940,29 @@ class _AdminUsersPageState extends State<AdminUsersPage>
   // Also update the _filterDocs method to work with the search:
 
   List<DocumentSnapshot> _filterDocs(List<DocumentSnapshot> docs) {
-    List<DocumentSnapshot> filtered = List.from(docs);
+    // First, apply filters
+    List<DocumentSnapshot> filtered = [];
 
-    // Apply role filter (this works in addition to AI search)
-    if (_selectedRoleFilter != 'all') {
-      filtered = filtered.where((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        return data['role'] == _selectedRoleFilter;
-      }).toList();
+    for (var doc in docs) {
+      final data = doc.data() as Map<String, dynamic>;
+
+      // Check role filter
+      if (_selectedRoleFilter != 'all' && data['role'] != _selectedRoleFilter) {
+        continue;
+      }
+
+      // Check status filter
+      if (_selectedStatusFilter != 'all') {
+        final isActive = _selectedStatusFilter == 'active';
+        if (data['isActive'] != isActive) {
+          continue;
+        }
+      }
+
+      filtered.add(doc);
     }
 
-    // Apply status filter (this works in addition to AI search)
-    if (_selectedStatusFilter != 'all') {
-      final isActive = _selectedStatusFilter == 'active';
-      filtered = filtered.where((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        return data['isActive'] == isActive;
-      }).toList();
-    }
-
-    // 🔄 Client-side sorting
+    // THEN, sort based on selected field and direction
     filtered.sort((a, b) {
       final dataA = a.data() as Map<String, dynamic>;
       final dataB = b.data() as Map<String, dynamic>;
@@ -1953,16 +1970,21 @@ class _AdminUsersPageState extends State<AdminUsersPage>
       dynamic valueA = dataA[_selectedSortField];
       dynamic valueB = dataB[_selectedSortField];
 
+      // Handle null cases
       if (valueA == null && valueB == null) return 0;
-      if (valueA == null) return 1;
-      if (valueB == null) return -1;
+      if (valueA == null) return 1; // nulls go to end
+      if (valueB == null) return -1; // nulls go to end
 
+      // Handle Timestamp fields (like createdAt, lastLogin)
       if (valueA is Timestamp && valueB is Timestamp) {
+        // When _sortAscending = true: oldest first
+        // When _sortAscending = false: newest first
         return _sortAscending
-            ? valueA.compareTo(valueB)
-            : valueB.compareTo(valueA);
+            ? valueA.compareTo(valueB) // Oldest first
+            : valueB.compareTo(valueA); // Newest first
       }
 
+      // For other fields (name, email, phone, etc.)
       final comparison = valueA.toString().compareTo(valueB.toString());
       return _sortAscending ? comparison : -comparison;
     });
@@ -1997,10 +2019,11 @@ class _AdminUsersPageState extends State<AdminUsersPage>
       physics: const BouncingScrollPhysics(),
       child: Row(
         children: [
+          // Role Filter (Single select)
           _buildFilterChipGroup(
             'Role',
             [
-              {'label': 'All', 'value': 'all'},
+              {'label': 'All Roles', 'value': 'all'},
               {'label': 'Users', 'value': 'user'},
               {'label': 'Owners', 'value': 'owner'},
               {'label': 'Admins', 'value': 'admin'},
@@ -2009,12 +2032,15 @@ class _AdminUsersPageState extends State<AdminUsersPage>
             (value) {
               setState(() {
                 _selectedRoleFilter = value;
-                _loadInitialUsers();
+                _lastDocument = null; // Reset pagination
+                _hasMoreData = true;
               });
+              _loadInitialUsers(); // Reload with new filter
             },
             fontSize: fontSize,
             padding: padding,
           ),
+
           Container(
             width: 1,
             height: _getResponsiveValue(
@@ -2025,6 +2051,8 @@ class _AdminUsersPageState extends State<AdminUsersPage>
             margin: EdgeInsets.symmetric(horizontal: padding * 1.5),
             color: Colors.grey.shade300,
           ),
+
+          // Status Filter (Single select with icons)
           _buildFilterChipGroup(
             'Status',
             [
@@ -2036,12 +2064,15 @@ class _AdminUsersPageState extends State<AdminUsersPage>
             (value) {
               setState(() {
                 _selectedStatusFilter = value;
-                _loadInitialUsers();
+                _lastDocument = null; // Reset pagination
+                _hasMoreData = true;
               });
+              _loadInitialUsers(); // Reload with new filter
             },
             fontSize: fontSize,
             padding: padding,
           ),
+
           Container(
             width: 1,
             height: _getResponsiveValue(
@@ -2052,6 +2083,8 @@ class _AdminUsersPageState extends State<AdminUsersPage>
             margin: EdgeInsets.symmetric(horizontal: padding * 1.5),
             color: Colors.grey.shade300,
           ),
+
+          // Sort Filter (Single select with visual indicators)
           _buildFilterChipGroup(
             'Sort by',
             [
@@ -2061,29 +2094,121 @@ class _AdminUsersPageState extends State<AdminUsersPage>
               {'label': 'Email', 'value': 'email'},
             ],
             _selectedSortField,
-            (value) => setState(() => _selectedSortField = value),
+            (value) {
+              setState(() {
+                _selectedSortField = value;
+                _lastDocument = null; // Reset pagination
+                _hasMoreData = true;
+              });
+              _loadInitialUsers(); // Reload with new sort
+
+              // Show feedback
+              String fieldName = value == 'createdAt'
+                  ? 'Join date'
+                  : value == 'lastLogin'
+                  ? 'Last active'
+                  : value == 'displayName'
+                  ? 'Name'
+                  : 'Email';
+              _showInfoNotification('Sorting by $fieldName');
+            },
             fontSize: fontSize,
             padding: padding,
           ),
-          SizedBox(width: padding),
-          IconButton(
-            icon: Icon(
-              _sortAscending
-                  ? Icons.arrow_upward_rounded
-                  : Icons.arrow_downward_rounded,
-              size: fontSize * 1.5,
-              color: Colors.deepPurple,
+
+          Container(
+            width: 1,
+            height: _getResponsiveValue(
+              base: 30,
+              smallPhone: 25,
+              smallestPhone: 20,
             ),
-            onPressed: () => setState(() => _sortAscending = !_sortAscending),
-            tooltip: _sortAscending ? 'Ascending' : 'Descending',
-            padding: EdgeInsets.zero,
-            constraints: BoxConstraints(
-              minWidth: fontSize * 2,
-              minHeight: fontSize * 2,
-            ),
+            margin: EdgeInsets.symmetric(horizontal: padding * 1.5),
+            color: Colors.grey.shade300,
+          ),
+
+          // Sort Direction (Toggle chip)
+          _buildSortDirectionChip(
+            ascending: _sortAscending,
+            onToggle: () {
+              setState(() {
+                _sortAscending = !_sortAscending;
+                _lastDocument = null; // Reset pagination
+                _hasMoreData = true;
+              });
+              _loadInitialUsers(); // Reload with new sort direction
+              _showInfoNotification(
+                _sortAscending ? 'Sorting ascending' : 'Sorting descending',
+              );
+            },
+            fontSize: fontSize,
+            padding: padding,
           ),
         ],
       ),
+    );
+  }
+
+  // Additional helper methods for special filter types
+
+  Widget _buildSortDirectionChip({
+    required bool ascending,
+    required VoidCallback onToggle,
+    required double fontSize,
+    required double padding,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: padding * 0.5, bottom: padding),
+          child: Text(
+            'Direction',
+            style: TextStyle(
+              fontSize: fontSize * 0.9,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ),
+        InkWell(
+          onTap: onToggle,
+          borderRadius: BorderRadius.circular(30),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: EdgeInsets.symmetric(
+              horizontal: padding * 1.8,
+              vertical: padding * 0.9,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: Colors.deepPurple, width: 2),
+              color: Colors.deepPurple.withOpacity(0.08),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  ascending
+                      ? Icons.arrow_upward_rounded
+                      : Icons.arrow_downward_rounded,
+                  size: fontSize * 1.2,
+                  color: Colors.deepPurple,
+                ),
+                SizedBox(width: padding * 0.75),
+                Text(
+                  ascending ? 'Ascending' : 'Descending',
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.deepPurple,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -2095,6 +2220,9 @@ class _AdminUsersPageState extends State<AdminUsersPage>
     required double fontSize,
     required double padding,
     Color color = Colors.deepPurple,
+    bool multiSelect = false,
+    Set<String>? selectedValues,
+    Function(Set<String>)? onMultiSelected,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2102,14 +2230,41 @@ class _AdminUsersPageState extends State<AdminUsersPage>
         // Label with modern styling
         Padding(
           padding: EdgeInsets.only(left: padding * 0.5, bottom: padding),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: fontSize * 0.9,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade600,
-              letterSpacing: 0.5,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: fontSize * 0.9,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              if (multiSelect)
+                Padding(
+                  padding: EdgeInsets.only(left: padding * 0.5),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: padding * 0.5,
+                      vertical: padding * 0.15,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.deepPurple.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'Multi',
+                      style: TextStyle(
+                        fontSize: fontSize * 0.7,
+                        color: Colors.deepPurple,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
 
@@ -2118,17 +2273,39 @@ class _AdminUsersPageState extends State<AdminUsersPage>
           spacing: padding,
           runSpacing: padding,
           children: options.map((option) {
-            final isSelected = selectedValue == option['value'];
+            final isSelected = multiSelect
+                ? (selectedValues?.contains(option['value']) ?? false)
+                : selectedValue == option['value'];
+
             final optionColor = _getOptionColor(option['value'] ?? '', color);
+            final icon = _getOptionIcon(option['value'] ?? '');
 
             return InkWell(
-              onTap: () => onSelected(option['value']!),
+              onTap: () {
+                if (multiSelect) {
+                  // Handle multi-select
+                  final newSelection = Set<String>.from(selectedValues ?? {});
+                  if (newSelection.contains(option['value'])) {
+                    newSelection.remove(option['value']);
+                  } else {
+                    newSelection.add(option['value']!);
+                  }
+                  onMultiSelected?.call(newSelection);
+                } else {
+                  // Handle single select
+                  onSelected(option['value']!);
+                }
+
+                // Haptic feedback for better UX
+                HapticFeedback.lightImpact();
+              },
               borderRadius: BorderRadius.circular(30),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
                 padding: EdgeInsets.symmetric(
-                  horizontal: padding * 2,
-                  vertical: padding,
+                  horizontal: padding * 1.8,
+                  vertical: padding * 0.9,
                 ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
@@ -2137,19 +2314,19 @@ class _AdminUsersPageState extends State<AdminUsersPage>
                     width: isSelected ? 2 : 1,
                   ),
                   color: isSelected
-                      ? optionColor.withOpacity(0.05)
+                      ? optionColor.withOpacity(0.08)
                       : Colors.transparent,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // Optional icon based on option
-                    if (_getOptionIcon(option['value'] ?? '') != null)
+                    if (icon != null)
                       Padding(
                         padding: EdgeInsets.only(right: padding * 0.75),
                         child: Icon(
-                          _getOptionIcon(option['value'] ?? ''),
-                          size: fontSize,
+                          icon,
+                          size: fontSize * 1.2,
                           color: isSelected
                               ? optionColor
                               : Colors.grey.shade500,
@@ -2167,12 +2344,75 @@ class _AdminUsersPageState extends State<AdminUsersPage>
                         color: isSelected ? optionColor : Colors.grey.shade700,
                       ),
                     ),
+
+                    // Selected count indicator for multi-select
+                    if (multiSelect && isSelected)
+                      Padding(
+                        padding: EdgeInsets.only(left: padding * 0.75),
+                        child: Container(
+                          width: fontSize * 1.2,
+                          height: fontSize * 1.2,
+                          decoration: BoxDecoration(
+                            color: optionColor,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: fontSize * 0.8,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
             );
           }).toList(),
         ),
+
+        // Clear all button for multi-select mode
+        if (multiSelect && selectedValues?.isNotEmpty == true)
+          Padding(
+            padding: EdgeInsets.only(top: padding * 0.5),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  onMultiSelected?.call({});
+                  HapticFeedback.lightImpact();
+                },
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: padding,
+                    vertical: padding * 0.5,
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.clear_rounded,
+                      size: fontSize * 1.1,
+                      color: Colors.red.shade400,
+                    ),
+                    SizedBox(width: padding * 0.25),
+                    Text(
+                      'Clear all',
+                      style: TextStyle(
+                        fontSize: fontSize * 0.9,
+                        color: Colors.red.shade400,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -2821,7 +3061,6 @@ class _AdminUsersPageState extends State<AdminUsersPage>
     final role = data['role'] ?? 'user';
     final email = data['email'] ?? 'No email';
     final displayName = data['displayName'] ?? email.split('@')[0];
-    final phoneNumber = data['phone'] ?? data['phoneNumber'] ?? 'No phone';
     final createdAt = data['createdAt'] as Timestamp?;
     final lastLogin = data['lastLogin'] as Timestamp?;
     final photoURL = data['photoURL'];
@@ -3024,10 +3263,11 @@ class _AdminUsersPageState extends State<AdminUsersPage>
                               SizedBox(width: spacing * 0.4),
                               Flexible(
                                 child: Text(
-                                  phoneNumber,
+                                  _getPhoneNumber(data),
                                   style: TextStyle(
                                     fontSize: normalTextSize,
                                     color: Colors.grey.shade600,
+                                    fontStyle: FontStyle.normal,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -4619,6 +4859,18 @@ class _AdminUsersPageState extends State<AdminUsersPage>
       greeting = "Good Night";
 
     return "$greeting, $firstName 👋";
+  }
+
+  // Add these helper methods to your class
+  String _getPhoneNumber(Map<String, dynamic> data) {
+    // Check both possible phone field names
+    final phone = data['phone'] ?? data['phoneNumber'];
+
+    if (phone == null || phone.toString().trim().isEmpty) {
+      return 'No phone';
+    }
+
+    return phone.toString();
   }
 }
 

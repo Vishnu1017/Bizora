@@ -1568,32 +1568,6 @@ class _AdminHomeState extends State<AdminHome>
             ],
           ),
         ),
-        if (_isLoadingMore)
-          Positioned(
-            top: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                  ),
-                ],
-              ),
-              child: SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.deepPurple),
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }

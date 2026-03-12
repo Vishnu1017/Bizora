@@ -1,8 +1,13 @@
+import 'dart:io';
+
+import 'package:bizora/core/utils/firebase_snackbar.dart';
 import 'package:bizora/features/auth/screens/login_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AdminSettingsPage extends StatefulWidget {
   const AdminSettingsPage({super.key});
@@ -16,6 +21,8 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
   bool _isEditing = false;
   bool _isSaving = false;
   bool _isLoggingOut = false;
+  File? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
 
   // User data
   String _displayName = '';
@@ -168,10 +175,64 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
         _email = user.email ?? 'admin@example.com';
         _phone = user.phoneNumber ?? 'No phone';
         _photoURL = user.photoURL ?? '';
-
         _nameController.text = _displayName;
         _phoneController.text = _phone;
       });
+    }
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+
+        await _uploadProfileImage();
+      }
+    } catch (e) {
+      _showSnackBar('Image selection failed');
+    }
+  }
+
+  Future<void> _uploadProfileImage() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null || _selectedImage == null) return;
+
+      setState(() => _isSaving = true);
+
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('profile_images')
+          .child('${user.uid}.jpg');
+
+      await storageRef.putFile(_selectedImage!);
+
+      final downloadUrl = await storageRef.getDownloadURL();
+
+      // Update Firebase Auth
+      await user.updatePhotoURL(downloadUrl);
+
+      // Update Firestore
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
+        {'photoURL': downloadUrl},
+      );
+
+      setState(() {
+        _photoURL = downloadUrl;
+      });
+
+      _showSnackBar('Profile image updated', isError: false);
+    } catch (e) {
+      _showSnackBar('Image upload failed');
+    } finally {
+      setState(() => _isSaving = false);
     }
   }
 
@@ -296,26 +357,11 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
   }
 
   void _showSnackBar(String message, {bool isError = true}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              isError ? Icons.error_outline : Icons.check_circle_outline,
-              color: Colors.white,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: isError ? Colors.red.shade600 : Colors.green.shade600,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 3),
-      ),
-    );
+    if (isError) {
+      FirebaseSnackbar.error(context, message);
+    } else {
+      FirebaseSnackbar.success(context, message);
+    }
   }
 
   @override
@@ -499,9 +545,23 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
                     ),
                   ],
                 ),
-                child: _photoURL.isNotEmpty
+                child: _selectedImage != null
                     ? ClipOval(
-                        child: Image.network(_photoURL, fit: BoxFit.cover),
+                        child: Image.file(
+                          _selectedImage!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                        ),
+                      )
+                    : _photoURL.isNotEmpty
+                    ? ClipOval(
+                        child: Image.network(
+                          _photoURL,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                        ),
                       )
                     : Center(
                         child: Text(
@@ -521,11 +581,9 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
                   bottom: 0,
                   right: 0,
                   child: GestureDetector(
-                    onTap: () {
-                      _showSnackBar('Photo upload coming soon', isError: false);
-                    },
+                    onTap: _pickImage,
                     child: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
@@ -537,8 +595,8 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
                         ],
                       ),
                       child: Icon(
-                        Icons.camera_alt_rounded,
-                        size: isSmallPhone ? 16 : 18,
+                        Icons.photo_camera_rounded,
+                        size: isSmallPhone ? 18 : 20,
                         color: const Color(0xFF4158D0),
                       ),
                     ),
@@ -1305,96 +1363,405 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
   }
 
   Widget _buildLogoutConfirmationDialog() {
+    // Get screen size for responsive calculations
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 400;
+    final isTablet = screenSize.width >= 600 && screenSize.width < 900;
+    final isDesktop = screenSize.width >= 900;
+
+    // Responsive sizing
+    double getResponsiveValue({
+      required double mobile,
+      double? tablet,
+      double? desktop,
+    }) {
+      if (isDesktop && desktop != null) return desktop;
+      if (isTablet && tablet != null) return tablet;
+      return mobile;
+    }
+
+    final double dialogWidth = getResponsiveValue(
+      mobile: isSmallScreen ? 320 : 360,
+      tablet: 400,
+      desktop: 440,
+    );
+
+    final double iconSize = getResponsiveValue(
+      mobile: isSmallScreen ? 40 : 48,
+      tablet: 56,
+      desktop: 64,
+    );
+
+    final double titleSize = getResponsiveValue(
+      mobile: isSmallScreen ? 20 : 22,
+      tablet: 24,
+      desktop: 26,
+    );
+
+    final double messageSize = getResponsiveValue(
+      mobile: isSmallScreen ? 14 : 15,
+      tablet: 16,
+      desktop: 17,
+    );
+
+    final double buttonHeight = getResponsiveValue(
+      mobile: 44,
+      tablet: 48,
+      desktop: 52,
+    );
+
+    final double buttonFontSize = getResponsiveValue(
+      mobile: 15,
+      tablet: 16,
+      desktop: 17,
+    );
+
+    final double spacing = getResponsiveValue(
+      mobile: 20,
+      tablet: 24,
+      desktop: 28,
+    );
+
+    final double padding = getResponsiveValue(
+      mobile: 24,
+      tablet: 28,
+      desktop: 32,
+    );
+
+    final double borderRadius = getResponsiveValue(
+      mobile: 24,
+      tablet: 28,
+      desktop: 32,
+    );
+
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isSmallScreen ? 16 : 24,
+        vertical: 24,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(borderRadius),
+      ),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       child: Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Warning Icon
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.logout_rounded,
-                color: Colors.red.shade600,
-                size: 32,
-              ),
+        width: dialogWidth,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.white, Color(0xFFFDFDFD)],
+          ),
+          borderRadius: BorderRadius.circular(borderRadius),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 50,
+              offset: const Offset(0, 25),
+              spreadRadius: -5,
             ),
-
-            const SizedBox(height: 16),
-
-            // Title
-            const Text(
-              'Sign Out',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-            ),
-
-            const SizedBox(height: 8),
-
-            // Message
-            Text(
-              'Are you sure you want to sign out of your account?',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      'Cancel',
-                      style: TextStyle(
-                        color: Colors.grey.shade700,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: 12),
-
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.shade600,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Sign Out',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            BoxShadow(
+              color: Colors.red.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+              spreadRadius: -5,
             ),
           ],
         ),
+        child: Material(
+          color: Colors.transparent,
+          child: Padding(
+            padding: EdgeInsets.all(padding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Animated Warning Icon with Glow Effect
+                TweenAnimationBuilder<double>(
+                  duration: const Duration(milliseconds: 600),
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  curve: Curves.elasticOut,
+                  builder: (context, value, child) {
+                    return Transform.scale(
+                      scale: 0.8 + (0.2 * value),
+                      child: Container(
+                        width: iconSize * 1.8,
+                        height: iconSize * 1.8,
+                        decoration: BoxDecoration(
+                          gradient: SweepGradient(
+                            colors: [
+                              Colors.red.shade50,
+                              Colors.red.shade100,
+                              Colors.red.shade50,
+                            ],
+                            transform: GradientRotation(value * 2),
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.red.withOpacity(
+                                0.3 - (value * 0.1),
+                              ),
+                              blurRadius: 20 * value,
+                              spreadRadius: 5 * value,
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Container(
+                            width: iconSize * 1.2,
+                            height: iconSize * 1.2,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.red.withOpacity(0.2),
+                                  blurRadius: 15,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Icon(
+                                Icons.logout_rounded,
+                                color: Colors.red.shade600,
+                                size: iconSize * 0.6,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                SizedBox(height: spacing * 0.8),
+
+                // Title with Gradient
+                ShaderMask(
+                  shaderCallback: (bounds) => LinearGradient(
+                    colors: [Colors.red.shade700, Colors.red.shade500],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ).createShader(bounds),
+                  child: Text(
+                    'Sign Out',
+                    style: TextStyle(
+                      fontSize: titleSize,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: spacing * 0.4),
+
+                // Message with enhanced readability
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: spacing * 0.3),
+                  child: Text(
+                    'Are you sure you want to sign out of your account?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: messageSize,
+                      color: Colors.grey.shade700,
+                      height: 1.5,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+
+                // Session info for enterprise context
+                SizedBox(height: spacing * 0.6),
+
+                Container(
+                  padding: EdgeInsets.all(spacing * 0.5),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(borderRadius * 0.5),
+                    border: Border.all(color: Colors.grey.shade200, width: 1),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.security_rounded,
+                        size: messageSize * 1.2,
+                        color: Colors.grey.shade600,
+                      ),
+                      SizedBox(width: spacing * 0.3),
+                      Flexible(
+                        child: Text(
+                          'You will be redirected to the login screen',
+                          style: TextStyle(
+                            fontSize: messageSize * 0.9,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: spacing),
+
+                // Buttons with enhanced design
+                Row(
+                  children: [
+                    // Cancel Button
+                    Expanded(
+                      child: _buildDialogButton(
+                        label: 'Cancel',
+                        onPressed: () => Navigator.pop(context, false),
+                        isPrimary: false,
+                        height: buttonHeight,
+                        fontSize: buttonFontSize,
+                        borderRadius: borderRadius * 0.5,
+                      ),
+                    ),
+
+                    SizedBox(width: spacing * 0.5),
+
+                    // Sign Out Button
+                    Expanded(
+                      child: _buildDialogButton(
+                        label: 'Sign Out',
+                        onPressed: () => Navigator.pop(context, true),
+                        isPrimary: true,
+                        height: buttonHeight,
+                        fontSize: buttonFontSize,
+                        borderRadius: borderRadius * 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Enterprise footer
+                SizedBox(height: spacing * 0.5),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      'Secure Session • v2.0.1',
+                      style: TextStyle(
+                        fontSize: messageSize * 0.8,
+                        color: Colors.grey.shade400,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    SizedBox(width: 6),
+                    Container(
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Enhanced button widget with hover effects for desktop
+  Widget _buildDialogButton({
+    required String label,
+    required VoidCallback onPressed,
+    required bool isPrimary,
+    required double height,
+    required double fontSize,
+    required double borderRadius,
+  }) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: StatefulBuilder(
+        builder: (context, setState) {
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: height,
+            decoration: BoxDecoration(
+              gradient: isPrimary
+                  ? LinearGradient(
+                      colors: [Colors.red.shade600, Colors.red.shade500],
+                    )
+                  : null,
+              color: isPrimary ? null : Colors.transparent,
+              borderRadius: BorderRadius.circular(borderRadius),
+              border: isPrimary
+                  ? null
+                  : Border.all(color: Colors.grey.shade300, width: 1.5),
+              boxShadow: isPrimary
+                  ? [
+                      BoxShadow(
+                        color: Colors.red.withOpacity(0.2),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onPressed,
+                onHover: (hover) {
+                  setState(() as VoidCallback);
+                },
+                borderRadius: BorderRadius.circular(borderRadius),
+                splashColor: isPrimary
+                    ? Colors.white.withOpacity(0.2)
+                    : Colors.red.withOpacity(0.1),
+                highlightColor: Colors.transparent,
+                child: Container(
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (isPrimary)
+                        Icon(
+                          Icons.logout_rounded,
+                          size: fontSize * 1.2,
+                          color: Colors.white,
+                        ),
+                      if (isPrimary) SizedBox(width: 8),
+                      Text(
+                        label,
+                        style: TextStyle(
+                          color: isPrimary
+                              ? Colors.white
+                              : Colors.grey.shade700,
+                          fontSize: fontSize,
+                          fontWeight: isPrimary
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

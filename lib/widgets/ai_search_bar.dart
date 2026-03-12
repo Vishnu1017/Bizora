@@ -674,7 +674,7 @@ class _AISearchBarState extends State<AISearchBar>
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white.withOpacity(0.3)),
         boxShadow: [
           BoxShadow(
@@ -972,7 +972,7 @@ class _AISearchBarState extends State<AISearchBar>
       padding: EdgeInsets.only(bottom: isSmallScreen ? 12 : 16),
       child: InkWell(
         onTap: _selectDateRange,
-        borderRadius: BorderRadius.circular(isSmallScreen ? 8 : 10),
+        borderRadius: BorderRadius.circular(isSmallScreen ? 8 : 16),
         child: Container(
           padding: EdgeInsets.symmetric(
             horizontal: isSmallScreen ? 10 : 12,
@@ -980,7 +980,7 @@ class _AISearchBarState extends State<AISearchBar>
           ),
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(isSmallScreen ? 8 : 10),
+            borderRadius: BorderRadius.circular(isSmallScreen ? 8 : 16),
           ),
           child: Row(
             children: [

@@ -1031,11 +1031,11 @@ class _AdminUsersPageState extends State<AdminUsersPage>
     );
 
     double titleSize = _getResponsiveFontSize(
-      base: 32,
-      largePhone: 28,
-      mediumPhone: 26,
-      smallPhone: 24,
-      smallestPhone: 22,
+      base: 28,
+      largePhone: 24,
+      mediumPhone: 22,
+      smallPhone: 20,
+      smallestPhone: 18,
       tablet: 30,
       desktop: 34,
     );
@@ -1479,56 +1479,39 @@ class _AdminUsersPageState extends State<AdminUsersPage>
     required bool isMediumPhone,
     required bool isLargePhone,
   }) {
-    // Responsive sizing based on screen size
-    double cardWidth = _getResponsiveValue(
-      base: 95,
-      largePhone: 90,
-      mediumPhone: 85,
-      smallPhone: 80,
-      smallestPhone: 75,
-    );
-
     double iconSize = _getResponsiveValue(
-      base: 22,
-      largePhone: 20,
-      mediumPhone: 18,
-      smallPhone: 16,
-      smallestPhone: 14,
-    );
-
-    double iconContainerSize = _getResponsiveValue(
-      base: 36,
-      largePhone: 34,
-      mediumPhone: 32,
-      smallPhone: 30,
-      smallestPhone: 28,
+      base: 20,
+      largePhone: 18,
+      mediumPhone: 16,
+      smallPhone: 14,
+      smallestPhone: 12,
     );
 
     double fontSize = _getResponsiveFontSize(
-      base: 16,
-      largePhone: 15,
-      mediumPhone: 14,
-      smallPhone: 13,
-      smallestPhone: 12,
+      base: 18,
+      largePhone: 16,
+      mediumPhone: 15,
+      smallPhone: 14,
+      smallestPhone: 13,
     );
 
     double labelSize = _getResponsiveFontSize(
       base: 10,
-      largePhone: 9.5,
-      mediumPhone: 9,
-      smallPhone: 8.5,
-      smallestPhone: 8,
-    );
-
-    double borderRadius = _getResponsiveValue(
-      base: 14,
-      largePhone: 12,
-      mediumPhone: 10,
+      largePhone: 9,
+      mediumPhone: 8.5,
       smallPhone: 8,
-      smallestPhone: 6,
+      smallestPhone: 7,
     );
 
     double padding = _getResponsiveValue(
+      base: 12,
+      largePhone: 11,
+      mediumPhone: 10,
+      smallPhone: 9,
+      smallestPhone: 8,
+    );
+
+    double iconPadding = _getResponsiveValue(
       base: 8,
       largePhone: 7,
       mediumPhone: 6,
@@ -1536,70 +1519,90 @@ class _AdminUsersPageState extends State<AdminUsersPage>
       smallestPhone: 4,
     );
 
-    // Use a simple ValueListenableBuilder without animation for immediate display
+    double minWidth = _getResponsiveValue(
+      base: 120,
+      largePhone: 110,
+      mediumPhone: 100,
+      smallPhone: 90,
+      smallestPhone: 80,
+    );
+
+    double maxWidth = _getResponsiveValue(
+      base: 150,
+      largePhone: 140,
+      mediumPhone: 130,
+      smallPhone: 120,
+      smallestPhone: 100,
+    );
+
     return ValueListenableBuilder<int>(
       valueListenable: countNotifier,
       builder: (context, count, _) {
         return Container(
-          width: cardWidth,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Colors.white, color.withOpacity(0.03)],
-            ),
-            borderRadius: BorderRadius.circular(borderRadius),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-            border: Border.all(color: color.withOpacity(0.15), width: 1),
-          ),
-          child: Padding(
+          constraints: BoxConstraints(minWidth: minWidth, maxWidth: maxWidth),
+          child: Container(
             padding: EdgeInsets.all(padding),
-            child: Column(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(
+                _getResponsiveValue(
+                  base: 16,
+                  smallPhone: 14,
+                  smallestPhone: 12,
+                ),
+              ),
+            ),
+            child: Row(
               mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Icon
                 Container(
-                  width: iconContainerSize,
-                  height: iconContainerSize,
+                  padding: EdgeInsets.all(iconPadding),
                   decoration: BoxDecoration(
                     color: color.withOpacity(0.1),
-                    shape: BoxShape.circle,
+                    borderRadius: BorderRadius.circular(
+                      _getResponsiveValue(
+                        base: 10,
+                        smallPhone: 8,
+                        smallestPhone: 6,
+                      ),
+                    ),
                   ),
-                  child: Center(
-                    child: Icon(icon, color: color, size: iconSize),
+                  child: Icon(icon, color: color, size: iconSize),
+                ),
+
+                SizedBox(
+                  width: _getResponsiveValue(
+                    base: 8,
+                    smallPhone: 6,
+                    smallestPhone: 4,
                   ),
                 ),
 
-                SizedBox(height: padding),
-
-                // Count - show immediately without animation
-                Text(
-                  count.toString(),
-                  style: TextStyle(
-                    fontSize: fontSize,
-                    fontWeight: FontWeight.bold,
-                    color: color,
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        count.toString(),
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.bold,
+                          color: color,
+                        ),
+                      ),
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: labelSize,
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
-                ),
-
-                // Label
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: labelSize,
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
                 ),
               ],
             ),
@@ -2242,28 +2245,6 @@ class _AdminUsersPageState extends State<AdminUsersPage>
                   letterSpacing: 0.5,
                 ),
               ),
-              if (multiSelect)
-                Padding(
-                  padding: EdgeInsets.only(left: padding * 0.5),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: padding * 0.5,
-                      vertical: padding * 0.15,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.deepPurple.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      'Multi',
-                      style: TextStyle(
-                        fontSize: fontSize * 0.7,
-                        color: Colors.deepPurple,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
             ],
           ),
         ),
@@ -2739,7 +2720,7 @@ class _AdminUsersPageState extends State<AdminUsersPage>
                 ),
               ),
             ),
-            padding: const EdgeInsets.all(2), // border thickness
+            padding: const EdgeInsets.all(1.5), // border thickness
             child: Container(
               padding: EdgeInsets.symmetric(
                 horizontal: padding,

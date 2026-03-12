@@ -1238,11 +1238,11 @@ class _AdminHomeState extends State<AdminHome>
                             "Owner Applications",
                             style: TextStyle(
                               fontSize: _getResponsiveFontSize(
-                                base: 32,
-                                largePhone: 28,
-                                mediumPhone: 26,
-                                smallPhone: 24,
-                                smallestPhone: 22,
+                                base: 28,
+                                largePhone: 24,
+                                mediumPhone: 22,
+                                smallPhone: 20,
+                                smallestPhone: 18,
                                 tablet: 30,
                                 desktop: 34,
                               ),
@@ -1958,14 +1958,6 @@ class _AdminHomeState extends State<AdminHome>
           borderRadius: BorderRadius.circular(
             _getResponsiveValue(base: 16, smallPhone: 14, smallestPhone: 12),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.15),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-              spreadRadius: -3,
-            ),
-          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -2008,7 +2000,7 @@ class _AdminHomeState extends State<AdminHome>
                     label,
                     style: TextStyle(
                       fontSize: labelSize,
-                      color: Colors.grey.shade600,
+                      color: Colors.grey.shade700,
                       fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
@@ -2297,13 +2289,19 @@ class _AdminHomeState extends State<AdminHome>
         right: _getResponsiveValue(base: 8, smallPhone: 6, smallestPhone: 4),
       ),
       child: InkWell(
-        onTap: () => onSelected(value),
+        onTap: () {
+          onSelected(value);
+
+          // Haptic feedback for better UX
+          HapticFeedback.lightImpact();
+        },
         borderRadius: BorderRadius.circular(30),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
           padding: EdgeInsets.symmetric(
-            horizontal: padding * 1.6,
-            vertical: padding,
+            horizontal: padding * 1.8,
+            vertical: padding * 0.9,
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
@@ -2311,15 +2309,41 @@ class _AdminHomeState extends State<AdminHome>
               color: isSelected ? color : Colors.grey.shade300,
               width: isSelected ? 2 : 1,
             ),
-            color: isSelected ? color.withOpacity(0.05) : Colors.transparent,
+            color: isSelected ? color.withOpacity(0.08) : Colors.transparent,
           ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: fontSize,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              color: isSelected ? color : Colors.grey.shade700,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Selected check indicator
+              if (isSelected)
+                Padding(
+                  padding: EdgeInsets.only(right: padding * 0.6),
+                  child: Container(
+                    width: fontSize * 1.2,
+                    height: fontSize * 1.2,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: fontSize * 0.8,
+                      ),
+                    ),
+                  ),
+                ),
+
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  color: isSelected ? color : Colors.grey.shade700,
+                ),
+              ),
+            ],
           ),
         ),
       ),

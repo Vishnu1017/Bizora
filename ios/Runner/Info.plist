@@ -54,6 +54,7 @@
     </dict>
 
     <!-- GOOGLE SIGN IN URL SCHEME -->
+    <!-- GOOGLE SIGN IN & FIREBASE URL SCHEMES -->
     <key>CFBundleURLTypes</key>
     <array>
         <dict>
@@ -61,11 +62,13 @@
             <string>Editor</string>
             <key>CFBundleURLSchemes</key>
             <array>
+                <!-- Google Sign-In scheme (your existing one) -->
+                <string>com.googleusercontent.apps.758451518573-kli9326cj2n2092o1d4i0b7s0talca6j</string>
+                <!-- REVERSED_CLIENT_ID for Firebase Phone Auth - this is the same value! -->
                 <string>com.googleusercontent.apps.758451518573-kli9326cj2n2092o1d4i0b7s0talca6j</string>
             </array>
         </dict>
     </array>
-
     <!-- SCENE CONFIG -->
     <key>UIApplicationSceneManifest</key>
     <dict>

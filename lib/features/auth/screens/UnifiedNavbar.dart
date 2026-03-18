@@ -35,6 +35,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
   int _currentIndex = 0;
   bool _isAppBarExpanded = true;
   bool _isSearchVisible = false;
+  late final Widget _cachedGreeting;
 
   // Add a loading state
   bool _isLoading = true;
@@ -79,6 +80,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initializeAnimations();
+    _cachedGreeting = _getGreeting();
 
     // Initialize with default customer navigation first
     _initializeDefaultNavigation();
@@ -715,12 +717,51 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
     });
   }
 
-  String _getGreeting() {
+  Widget _getGreeting() {
     final hour = DateTime.now().hour;
-    if (hour < 12) return "Good Morning ☀️";
-    if (hour < 17) return "Good Afternoon 🌤️";
-    if (hour < 22) return "Good Evening 🌙";
-    return "Good Night ✨";
+
+    String text;
+    IconData iconData;
+    Color iconColor;
+
+    if (hour < 12) {
+      text = "Good Morning";
+      iconData = Icons.wb_sunny;
+      iconColor = Colors.amber;
+    } else if (hour < 17) {
+      text = "Good Afternoon";
+      iconData = Icons.wb_cloudy;
+      iconColor = Colors.blue;
+    } else if (hour < 22) {
+      text = "Good Evening";
+      iconData = Icons.nightlight_round;
+      iconColor = Colors.indigo;
+    } else {
+      text = "Good Night";
+      iconData = Icons.stars;
+      iconColor = Colors.purple;
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Icon(
+          // ✅ Wrap IconData in Icon widget
+          iconData,
+          color: iconColor,
+          size: 18,
+        ),
+      ],
+    );
   }
 
   String _getTitlePrefix() {
@@ -951,14 +992,10 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                       ),
                                     ] else ...[
                                       // Customer mode - show greeting and name
-                                      Text(
-                                        _getGreeting(),
-                                        style: TextStyle(
-                                          fontSize: isMobile ? 13 : 14,
-                                          color: Colors.grey[600],
-                                          fontWeight: FontWeight.w500,
-                                          letterSpacing: 0.2,
-                                        ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [_getGreeting()],
                                       ),
                                       const SizedBox(height: 4),
                                       Text(

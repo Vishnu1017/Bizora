@@ -9,6 +9,8 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.READ_SMS" />
 
     <application
         android:label="bizora"
@@ -25,6 +27,16 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- 👇 ADD THE SMS RETRIEVER SERVICE HERE (RIGHT AFTER PROVIDER) 👇 -->
+        <!-- Add this for SMS Retriever API -->
+        <service
+            android:name="com.google.android.gms.auth.api.phone.SmsRetrieverApiService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.auth.api.phone.action.SMS_RETRIEVER"/>
+            </intent-filter>
+        </service>
 
         <activity
             android:name="com.bizora.app.MainActivity"

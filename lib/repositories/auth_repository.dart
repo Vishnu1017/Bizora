@@ -44,6 +44,9 @@ class AuthRepository {
         throw Exception("Owner account pending admin approval");
       }
 
+      // Update last login time
+      await doc.reference.update({'lastLogin': FieldValue.serverTimestamp()});
+
       return data['role'];
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
@@ -85,16 +88,23 @@ class AuthRepository {
       final userCredential = await _auth.signInWithCredential(credential);
 
       final uid = userCredential.user!.uid;
+      final user = userCredential.user!;
 
       final docRef = _firestore.collection('users').doc(uid);
       final doc = await docRef.get();
 
       if (!doc.exists) {
+        // Create new user document
         await docRef.set({
-          'email': userCredential.user!.email,
+          'email': user.email,
+          'displayName':
+              user.displayName ?? user.email?.split('@')[0] ?? 'User',
+          'photoURL': user.photoURL,
           'role': 'customer',
           'isApproved': true,
+          'provider': 'google',
           'createdAt': FieldValue.serverTimestamp(),
+          'lastLogin': FieldValue.serverTimestamp(),
         });
 
         return "customer";
@@ -106,9 +116,18 @@ class AuthRepository {
         throw Exception("Owner account pending admin approval");
       }
 
+      // Update last login and profile info
+      await docRef.update({
+        'lastLogin': FieldValue.serverTimestamp(),
+        'photoURL': user.photoURL,
+        'displayName': user.displayName ?? user.email?.split('@')[0],
+      });
+
       return data['role'];
+    } on FirebaseAuthException catch (e) {
+      throw Exception("Google login failed: ${e.message}");
     } catch (e) {
-      throw Exception("Google login failed");
+      throw Exception("Google login failed: $e");
     }
   }
 
@@ -145,24 +164,32 @@ class AuthRepository {
         verificationCompleted: (PhoneAuthCredential credential) async {
           try {
             final userCredential = await _auth.signInWithCredential(credential);
-
-            final uid = userCredential.user!.uid;
+            final user = userCredential.user!;
+            final uid = user.uid;
 
             final docRef = _firestore.collection("users").doc(uid);
             final doc = await docRef.get();
 
             if (!doc.exists) {
               await docRef.set({
-                "phone": userCredential.user!.phoneNumber,
+                "phone": user.phoneNumber,
+                "email": user.email,
+                "displayName": user.phoneNumber ?? 'User',
                 "role": "customer",
                 "isApproved": true,
+                "provider": "phone",
                 "createdAt": FieldValue.serverTimestamp(),
+                "lastLogin": FieldValue.serverTimestamp(),
               });
+            } else {
+              // Update last login
+              await docRef.update({'lastLogin': FieldValue.serverTimestamp()});
             }
 
             onCodeSent("AUTO_VERIFIED");
           } catch (e) {
             debugPrint("Auto verification error: $e");
+            onCodeSent("AUTO_VERIFIED"); // Still try to proceed
           }
         },
 
@@ -175,20 +202,18 @@ class AuthRepository {
           switch (e.code) {
             case "invalid-phone-number":
               throw Exception("Invalid phone number");
-
             case "too-many-requests":
               throw Exception("Too many requests. Try later.");
-
             case "quota-exceeded":
               throw Exception("SMS quota exceeded");
-
             default:
               throw Exception(e.message ?? "OTP verification failed");
           }
         },
 
         codeAutoRetrievalTimeout: (verificationId) {
-          onCodeSent(verificationId);
+          // Don't call onCodeSent here as it might cause duplicate
+          debugPrint("Auto retrieval timeout: $verificationId");
         },
       );
     } catch (e) {
@@ -210,18 +235,22 @@ class AuthRepository {
       );
 
       final userCredential = await _auth.signInWithCredential(credential);
-
-      final uid = userCredential.user!.uid;
+      final user = userCredential.user!;
+      final uid = user.uid;
 
       final docRef = _firestore.collection('users').doc(uid);
       final doc = await docRef.get();
 
       if (!doc.exists) {
         await docRef.set({
-          'phone': userCredential.user!.phoneNumber,
+          'phone': user.phoneNumber,
+          'email': user.email,
+          'displayName': user.phoneNumber ?? 'User',
           'role': 'customer',
           'isApproved': true,
+          'provider': 'phone',
           'createdAt': FieldValue.serverTimestamp(),
+          'lastLogin': FieldValue.serverTimestamp(),
         });
 
         return "customer";
@@ -233,18 +262,21 @@ class AuthRepository {
         throw Exception("Owner account pending admin approval");
       }
 
+      // Update last login
+      await docRef.update({'lastLogin': FieldValue.serverTimestamp()});
+
       return data['role'];
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         case "invalid-verification-code":
           throw Exception("Invalid OTP");
-
         case "session-expired":
           throw Exception("OTP expired");
-
         default:
-          throw Exception("OTP verification failed");
+          throw Exception("OTP verification failed: ${e.message}");
       }
+    } catch (e) {
+      throw Exception("OTP verification failed: $e");
     }
   }
 }

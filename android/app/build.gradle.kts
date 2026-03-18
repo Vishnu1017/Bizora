@@ -44,18 +44,19 @@ flutter {
     source = "../.."
 }
 
-dependencies {
+dependedependencies {
     // Firebase BOM
-    implementation(platform("com.google.firebase:firebase-bom:32.8.0"))  // 👈 Updated to latest
+    implementation(platform("com.google.firebase:firebase-bom:32.8.1"))
     
     // Firebase Auth
     implementation("com.google.firebase:firebase-auth")
     
-    // 👈 ADD THESE for Play Integrity and SMS Retriever
-    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    // Play Services
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
     implementation("com.google.android.gms:play-services-base:18.3.0")
     implementation("com.google.android.gms:play-services-safetynet:18.0.1")
+    implementation("com.google.android.gms:play-services-auth-api-phone:18.0.2")
     
-    // 👈 ADD THIS for better compatibility
-    implementation("androidx.browser:browser:1.7.0")
+    // AndroidX
+    implementation("androidx.browser:browser:1.8.0")
 }

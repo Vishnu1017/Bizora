@@ -29,6 +29,21 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
   String? phoneError;
   String? phoneNumber = '';
 
+  // Responsive breakpoints
+  static const double mobileSmallBreakpoint = 360;
+  static const double mobileMediumBreakpoint = 400;
+  static const double mobileLargeBreakpoint = 480;
+  static const double mobileBreakpoint = 600;
+  static const double tabletSmallBreakpoint = 600;
+  static const double tabletMediumBreakpoint = 720;
+  static const double tabletLargeBreakpoint = 840;
+  static const double desktopBreakpoint = 1024;
+  static const double desktopMediumBreakpoint = 1280;
+  static const double desktopLargeBreakpoint = 1440;
+  static const double desktopXLBreaKpoint = 1600;
+  static const double desktopXXLBreaKpoint = 1920;
+  static const double desktopXXXLBreaKpoint = 2560;
+
   @override
   void initState() {
     super.initState();
@@ -61,6 +76,189 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
     phoneFocus.dispose();
     _animationController.dispose();
     super.dispose();
+  }
+
+  // Device detection methods
+  bool isMobileSmall(double width) => width < mobileSmallBreakpoint;
+  bool isMobileMedium(double width) =>
+      width >= mobileSmallBreakpoint && width < mobileMediumBreakpoint;
+  bool isMobileLarge(double width) =>
+      width >= mobileMediumBreakpoint && width < mobileLargeBreakpoint;
+  bool isMobileStandard(double width) =>
+      width >= mobileLargeBreakpoint && width < mobileBreakpoint;
+  bool isMobile(double width) => width < mobileBreakpoint;
+
+  bool isTabletSmall(double width) =>
+      width >= tabletSmallBreakpoint && width < tabletMediumBreakpoint;
+  bool isTabletMedium(double width) =>
+      width >= tabletMediumBreakpoint && width < tabletLargeBreakpoint;
+  bool isTabletLarge(double width) =>
+      width >= tabletLargeBreakpoint && width < desktopBreakpoint;
+  bool isTablet(double width) =>
+      width >= tabletSmallBreakpoint && width < desktopBreakpoint;
+
+  bool isDesktopSmall(double width) =>
+      width >= desktopBreakpoint && width < desktopMediumBreakpoint;
+  bool isDesktopMedium(double width) =>
+      width >= desktopMediumBreakpoint && width < desktopLargeBreakpoint;
+  bool isDesktopLarge(double width) =>
+      width >= desktopLargeBreakpoint && width < desktopXLBreaKpoint;
+  bool isDesktopXL(double width) =>
+      width >= desktopXLBreaKpoint && width < desktopXXLBreaKpoint;
+  bool isDesktopXXL(double width) =>
+      width >= desktopXXLBreaKpoint && width < desktopXXXLBreaKpoint;
+  bool isDesktopXXXL(double width) => width >= desktopXXXLBreaKpoint;
+  bool isDesktop(double width) => width >= desktopBreakpoint;
+
+  double getResponsiveFontSize(
+    double width, {
+    double mobileSmall = 12.0,
+    double mobileMedium = 13.0,
+    double mobileLarge = 14.0,
+    double mobileStandard = 14.0,
+    double tabletSmall = 15.0,
+    double tabletMedium = 16.0,
+    double tabletLarge = 17.0,
+    double desktopSmall = 18.0,
+    double desktopMedium = 20.0,
+    double desktopLarge = 22.0,
+    double desktopXL = 24.0,
+    double desktopXXL = 26.0,
+    double desktopXXXL = 28.0,
+  }) {
+    if (isMobileSmall(width)) return mobileSmall;
+    if (isMobileMedium(width)) return mobileMedium;
+    if (isMobileLarge(width)) return mobileLarge;
+    if (isMobileStandard(width)) return mobileStandard;
+    if (isTabletSmall(width)) return tabletSmall;
+    if (isTabletMedium(width)) return tabletMedium;
+    if (isTabletLarge(width)) return tabletLarge;
+    if (isDesktopSmall(width)) return desktopSmall;
+    if (isDesktopMedium(width)) return desktopMedium;
+    if (isDesktopLarge(width)) return desktopLarge;
+    if (isDesktopXL(width)) return desktopXL;
+    if (isDesktopXXL(width)) return desktopXXL;
+    if (isDesktopXXXL(width)) return desktopXXXL;
+    return 14.0;
+  }
+
+  double getResponsivePadding(double width) {
+    if (isMobileSmall(width)) return 12.0;
+    if (isMobileMedium(width)) return 14.0;
+    if (isMobileLarge(width)) return 16.0;
+    if (isMobileStandard(width)) return 16.0;
+    if (isTabletSmall(width)) return width * 0.15;
+    if (isTabletMedium(width)) return width * 0.18;
+    if (isTabletLarge(width)) return width * 0.20;
+    if (isDesktopSmall(width)) return width * 0.25;
+    if (isDesktopMedium(width)) return width * 0.28;
+    if (isDesktopLarge(width)) return width * 0.30;
+    if (isDesktopXL(width)) return width * 0.32;
+    if (isDesktopXXL(width)) return width * 0.35;
+    if (isDesktopXXXL(width)) return width * 0.38;
+    return 16.0;
+  }
+
+  double getResponsiveCardWidth(double width) {
+    if (isMobileSmall(width)) return width * 0.95;
+    if (isMobileMedium(width)) return width * 0.9;
+    if (isMobileLarge(width)) return width * 0.85;
+    if (isMobileStandard(width)) return width * 0.8;
+    if (isTabletSmall(width)) return 480.0;
+    if (isTabletMedium(width)) return 520.0;
+    if (isTabletLarge(width)) return 560.0;
+    if (isDesktopSmall(width)) return 600.0;
+    if (isDesktopMedium(width)) return 650.0;
+    if (isDesktopLarge(width)) return 700.0;
+    if (isDesktopXL(width)) return 750.0;
+    if (isDesktopXXL(width)) return 800.0;
+    if (isDesktopXXXL(width)) return 850.0;
+    return width;
+  }
+
+  double getResponsiveIconSize(double width) {
+    if (isMobileSmall(width)) return 16.0;
+    if (isMobileMedium(width)) return 18.0;
+    if (isMobileLarge(width)) return 20.0;
+    if (isMobileStandard(width)) return 22.0;
+    if (isTabletSmall(width)) return 24.0;
+    if (isTabletMedium(width)) return 26.0;
+    if (isTabletLarge(width)) return 28.0;
+    if (isDesktopSmall(width)) return 30.0;
+    if (isDesktopMedium(width)) return 32.0;
+    if (isDesktopLarge(width)) return 34.0;
+    if (isDesktopXL(width)) return 36.0;
+    if (isDesktopXXL(width)) return 38.0;
+    if (isDesktopXXXL(width)) return 40.0;
+    return 22.0;
+  }
+
+  double getResponsiveButtonHeight(double width) {
+    if (isMobileSmall(width)) return 44.0;
+    if (isMobileMedium(width)) return 48.0;
+    if (isMobileLarge(width)) return 50.0;
+    if (isMobileStandard(width)) return 52.0;
+    if (isTabletSmall(width)) return 54.0;
+    if (isTabletMedium(width)) return 56.0;
+    if (isTabletLarge(width)) return 58.0;
+    if (isDesktopSmall(width)) return 60.0;
+    if (isDesktopMedium(width)) return 62.0;
+    if (isDesktopLarge(width)) return 64.0;
+    if (isDesktopXL(width)) return 66.0;
+    if (isDesktopXXL(width)) return 68.0;
+    if (isDesktopXXXL(width)) return 70.0;
+    return 52.0;
+  }
+
+  double getResponsiveBorderRadius(double width) {
+    if (isMobileSmall(width)) return 16.0;
+    if (isMobileMedium(width)) return 18.0;
+    if (isMobileLarge(width)) return 20.0;
+    if (isMobileStandard(width)) return 22.0;
+    if (isTabletSmall(width)) return 24.0;
+    if (isTabletMedium(width)) return 26.0;
+    if (isTabletLarge(width)) return 28.0;
+    if (isDesktopSmall(width)) return 30.0;
+    if (isDesktopMedium(width)) return 32.0;
+    if (isDesktopLarge(width)) return 34.0;
+    if (isDesktopXL(width)) return 36.0;
+    if (isDesktopXXL(width)) return 38.0;
+    if (isDesktopXXXL(width)) return 40.0;
+    return 22.0;
+  }
+
+  double getResponsiveSpacing(double width, {double factor = 1.0}) {
+    if (isMobileSmall(width)) return 8.0 * factor;
+    if (isMobileMedium(width)) return 10.0 * factor;
+    if (isMobileLarge(width)) return 12.0 * factor;
+    if (isMobileStandard(width)) return 14.0 * factor;
+    if (isTabletSmall(width)) return 16.0 * factor;
+    if (isTabletMedium(width)) return 18.0 * factor;
+    if (isTabletLarge(width)) return 20.0 * factor;
+    if (isDesktopSmall(width)) return 22.0 * factor;
+    if (isDesktopMedium(width)) return 24.0 * factor;
+    if (isDesktopLarge(width)) return 26.0 * factor;
+    if (isDesktopXL(width)) return 28.0 * factor;
+    if (isDesktopXXL(width)) return 30.0 * factor;
+    if (isDesktopXXXL(width)) return 32.0 * factor;
+    return 14.0 * factor;
+  }
+
+  EdgeInsets getResponsiveInsets(double width) {
+    if (isMobileSmall(width)) return const EdgeInsets.all(12.0);
+    if (isMobileMedium(width)) return const EdgeInsets.all(14.0);
+    if (isMobileLarge(width)) return const EdgeInsets.all(16.0);
+    if (isMobileStandard(width)) return const EdgeInsets.all(18.0);
+    if (isTabletSmall(width)) return const EdgeInsets.all(20.0);
+    if (isTabletMedium(width)) return const EdgeInsets.all(22.0);
+    if (isTabletLarge(width)) return const EdgeInsets.all(24.0);
+    if (isDesktopSmall(width)) return const EdgeInsets.all(26.0);
+    if (isDesktopMedium(width)) return const EdgeInsets.all(28.0);
+    if (isDesktopLarge(width)) return const EdgeInsets.all(30.0);
+    if (isDesktopXL(width)) return const EdgeInsets.all(32.0);
+    if (isDesktopXXL(width)) return const EdgeInsets.all(34.0);
+    if (isDesktopXXXL(width)) return const EdgeInsets.all(36.0);
+    return const EdgeInsets.all(18.0);
   }
 
   bool isValidPhone(String phone) {
@@ -96,30 +294,55 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
 
     FocusScope.of(context).unfocus();
     final phone = phoneController.text.trim();
-    context.read<AuthBloc>().add(PhoneLoginRequested(phone: "+91$phone"));
+
+    // Ensure proper format: +91XXXXXXXXXX (no spaces)
+    final formattedPhone = "+91$phone";
+    print("Sending OTP to: $formattedPhone"); // Debug print
+
+    context.read<AuthBloc>().add(PhoneLoginRequested(phone: formattedPhone));
   }
 
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
-    final size = media.size;
-    final width = size.width;
-    final height = size.height;
+    final double width = media.size.width;
+    final double height = media.size.height;
 
-    // Responsive breakpoints
-    final bool isMobile = width < 600;
-    final bool isTablet = width >= 600 && width < 1100;
-    final bool isDesktop = width >= 1100;
+    final bool isMobileDevice = isMobile(width);
+    final bool isTabletDevice = isTablet(width);
+    final bool isDesktopDevice = isDesktop(width);
 
-    // Dynamic padding
-    final double horizontalPadding = isDesktop
-        ? width * 0.35
-        : isTablet
-        ? width * 0.20
-        : 16;
+    // Dynamic values
+    final double horizontalPadding = getResponsivePadding(width);
+    final double cardWidth = getResponsiveCardWidth(width);
+    final EdgeInsets responsiveInsets = getResponsiveInsets(width);
 
-    // Card width constraints
-    final double cardWidth = isMobile ? width : (isTablet ? 480 : 520);
+    // Font sizes
+    final double logoIconSize = getResponsiveIconSize(width) * 2.5;
+    final double titleFontSize = getResponsiveFontSize(width) * 2.0;
+    final double subtitleFontSize = getResponsiveFontSize(width) * 1.1;
+    final double bodyFontSize = getResponsiveFontSize(width);
+    final double smallFontSize = getResponsiveFontSize(width) * 0.9;
+    final double iconSize = getResponsiveIconSize(width);
+    final double buttonIconSize = getResponsiveIconSize(width) * 1.2;
+
+    // Spacing
+    final double sectionSpacing = getResponsiveSpacing(width, factor: 2.0);
+    final double elementSpacing = getResponsiveSpacing(width, factor: 1.5);
+    final double smallSpacing = getResponsiveSpacing(width, factor: 1.0);
+
+    // Button heights
+    final double buttonHeight = getResponsiveButtonHeight(width);
+
+    // Border radius
+    final double cardBorderRadius = getResponsiveBorderRadius(width) * 1.5;
+    final double fieldBorderRadius = getResponsiveBorderRadius(width);
+    final double buttonBorderRadius = getResponsiveBorderRadius(width) * 1.2;
+    final double codeContainerBorderRadius = getResponsiveBorderRadius(width);
+
+    // Loading indicator sizes
+    final double indicatorSize = isMobileDevice ? 16.0 : 20.0;
+    final double loadingSize = isMobileDevice ? 12.0 : 14.0;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -139,15 +362,24 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
             listener: (context, state) {
               if (state is OtpSent) {
                 FirebaseSnackbar.success(context, "OTP sent successfully");
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => BlocProvider.value(
-                      value: context.read<AuthBloc>(),
-                      child: OtpScreen(verificationId: state.verificationId),
+
+                // Navigate to OTP screen with proper error handling
+                try {
+                  if (!mounted) return;
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => OtpScreen(
+                        verificationId: state.verificationId,
+                        phoneNumber: phoneNumber,
+                      ),
                     ),
-                  ),
-                );
+                  );
+                } catch (e) {
+                  print("Navigation error: $e");
+                  // This won't catch the hot reload warning
+                }
               }
               if (state is AuthFailure) {
                 FirebaseSnackbar.error(context, state.message);
@@ -157,38 +389,77 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
               return GestureDetector(
                 onTap: () => FocusScope.of(context).unfocus(),
                 child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: horizontalPadding,
-                      vertical: isMobile ? 20 : 30,
-                    ),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: cardWidth,
-                        maxHeight: height * 0.95,
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                        vertical: isMobileDevice ? 16.0 : 24.0,
                       ),
-                      child: FadeTransition(
-                        opacity: _fadeAnimation,
-                        child: SlideTransition(
-                          position: _slideAnimation,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _buildHeader(isMobile, isDesktop, state),
-
-                              SizedBox(height: isMobile ? 24 : 32),
-
-                              _buildPhoneCard(
-                                context,
-                                isMobile,
-                                isDesktop,
-                                state,
-                              ),
-
-                              SizedBox(height: isMobile ? 20 : 24),
-
-                              _buildFooter(isMobile),
-                            ],
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: cardWidth,
+                          maxHeight: isDesktopDevice
+                              ? height * 0.95
+                              : (isTabletDevice
+                                    ? height * 0.98
+                                    : height * 0.98),
+                        ),
+                        child: FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: SlideTransition(
+                            position: _slideAnimation,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _buildHeader(
+                                  isMobileDevice: isMobileDevice,
+                                  isDesktopDevice: isDesktopDevice,
+                                  logoIconSize: logoIconSize,
+                                  titleFontSize: titleFontSize,
+                                  subtitleFontSize: subtitleFontSize,
+                                  iconSize: iconSize,
+                                  indicatorSize: indicatorSize,
+                                  loadingSize: loadingSize,
+                                  state: state,
+                                ),
+                                SizedBox(
+                                  height: isMobileDevice
+                                      ? 20.0
+                                      : sectionSpacing,
+                                ),
+                                _buildPhoneCard(
+                                  context,
+                                  isMobileDevice: isMobileDevice,
+                                  isTabletDevice: isTabletDevice,
+                                  isDesktopDevice: isDesktopDevice,
+                                  responsiveInsets: responsiveInsets,
+                                  bodyFontSize: bodyFontSize,
+                                  smallFontSize: smallFontSize,
+                                  elementSpacing: elementSpacing,
+                                  smallSpacing: smallSpacing,
+                                  iconSize: iconSize,
+                                  buttonIconSize: buttonIconSize,
+                                  buttonHeight: buttonHeight,
+                                  cardBorderRadius: cardBorderRadius,
+                                  fieldBorderRadius: fieldBorderRadius,
+                                  buttonBorderRadius: buttonBorderRadius,
+                                  codeContainerBorderRadius:
+                                      codeContainerBorderRadius,
+                                  state: state,
+                                ),
+                                SizedBox(
+                                  height: isMobileDevice
+                                      ? 16.0
+                                      : sectionSpacing * 0.8,
+                                ),
+                                _buildFooter(
+                                  smallFontSize: smallFontSize,
+                                  isMobileDevice: isMobileDevice,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -203,11 +474,21 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
     );
   }
 
-  Widget _buildHeader(bool isMobile, bool isDesktop, AuthState state) {
+  Widget _buildHeader({
+    required bool isMobileDevice,
+    required bool isDesktopDevice,
+    required double logoIconSize,
+    required double titleFontSize,
+    required double subtitleFontSize,
+    required double iconSize,
+    required double indicatorSize,
+    required double loadingSize,
+    required AuthState state,
+  }) {
     return Column(
       children: [
         Container(
-          padding: EdgeInsets.all(isMobile ? 16 : 20),
+          padding: EdgeInsets.all(isMobileDevice ? 12.0 : 16.0),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: RadialGradient(
@@ -222,7 +503,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
             children: [
               Icon(
                 UniconsLine.mobile_android,
-                size: isMobile ? 60 : (isDesktop ? 80 : 70),
+                size: logoIconSize,
                 color: Colors.white,
               ),
               if (state is AuthLoading)
@@ -230,18 +511,22 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
                   right: 0,
                   top: 0,
                   child: Container(
-                    width: 16,
-                    height: 16,
+                    width: indicatorSize,
+                    height: indicatorSize,
                     decoration: const BoxDecoration(
                       color: Colors.green,
                       shape: BoxShape.circle,
                     ),
-                    child: const SizedBox(
-                      width: 12,
-                      height: 12,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    child: Center(
+                      child: SizedBox(
+                        width: loadingSize,
+                        height: loadingSize,
+                        child: const CircularProgressIndicator(
+                          strokeWidth: 2.0,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -252,9 +537,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
           duration: const Duration(milliseconds: 800),
           curve: Curves.elasticOut,
         ),
-
-        const SizedBox(height: 16),
-
+        SizedBox(height: isMobileDevice ? 12.0 : 16.0),
         ShaderMask(
           shaderCallback: (bounds) => const LinearGradient(
             colors: [Colors.white, Color(0xFFB794F4)],
@@ -262,21 +545,19 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
           child: Text(
             "Phone Login",
             style: TextStyle(
-              fontSize: isMobile ? 28 : (isDesktop ? 36 : 32),
+              fontSize: titleFontSize,
               fontWeight: FontWeight.bold,
               color: Colors.white,
               letterSpacing: 1.2,
             ),
           ),
         ),
-
-        const SizedBox(height: 8),
-
+        SizedBox(height: isMobileDevice ? 4.0 : 8.0),
         Text(
           "Verify your mobile number",
           style: TextStyle(
             color: Colors.white70,
-            fontSize: isMobile ? 14 : 16,
+            fontSize: subtitleFontSize,
             letterSpacing: 0.3,
           ),
         ),
@@ -285,18 +566,35 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
   }
 
   Widget _buildPhoneCard(
-    BuildContext context,
-    bool isMobile,
-    bool isDesktop,
-    AuthState state,
-  ) {
+    BuildContext context, {
+    required bool isMobileDevice,
+    required bool isTabletDevice,
+    required bool isDesktopDevice,
+    required EdgeInsets responsiveInsets,
+    required double bodyFontSize,
+    required double smallFontSize,
+    required double elementSpacing,
+    required double smallSpacing,
+    required double iconSize,
+    required double buttonIconSize,
+    required double buttonHeight,
+    required double cardBorderRadius,
+    required double fieldBorderRadius,
+    required double buttonBorderRadius,
+    required double codeContainerBorderRadius,
+    required AuthState state,
+  }) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(isMobile ? 24 : 32),
+      borderRadius: BorderRadius.circular(cardBorderRadius),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
         child: Container(
-          padding: EdgeInsets.all(isMobile ? 20 : 28),
-          constraints: const BoxConstraints(maxWidth: 520),
+          padding: EdgeInsets.all(isMobileDevice ? 16.0 : 24.0),
+          constraints: BoxConstraints(
+            maxWidth: isDesktopDevice
+                ? 700.0
+                : (isTabletDevice ? 600.0 : 500.0),
+          ),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -306,7 +604,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
                 Colors.white.withOpacity(0.05),
               ],
             ),
-            borderRadius: BorderRadius.circular(isMobile ? 24 : 32),
+            borderRadius: BorderRadius.circular(cardBorderRadius),
             border: Border.all(
               color: Colors.white.withOpacity(0.2),
               width: 1.5,
@@ -314,13 +612,12 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
             boxShadow: [
               BoxShadow(
                 color: Colors.purple.withOpacity(0.1),
-                blurRadius: 30,
-                spreadRadius: 5,
-                offset: const Offset(0, 10),
+                blurRadius: 30.0,
+                spreadRadius: 5.0,
+                offset: const Offset(0.0, 10.0),
               ),
             ],
           ),
-
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -328,22 +625,39 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildCountryCode(isMobile),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildPhoneField(isMobile, state)),
+                  _buildCountryCode(
+                    isMobile: isMobileDevice,
+                    isTablet: isTabletDevice,
+                    bodyFontSize: bodyFontSize,
+                    iconSize: iconSize,
+                    fieldBorderRadius: fieldBorderRadius,
+                    state: state,
+                  ),
+                  SizedBox(width: isMobileDevice ? 8.0 : 12.0),
+                  Expanded(
+                    child: _buildPhoneField(
+                      isMobile: isMobileDevice,
+                      isTablet: isTabletDevice,
+                      bodyFontSize: bodyFontSize,
+                      iconSize: iconSize,
+                      fieldBorderRadius: fieldBorderRadius,
+                      state: state,
+                    ),
+                  ),
                 ],
               ),
-
               if (phoneError != null) ...[
-                const SizedBox(height: 10),
+                SizedBox(height: smallSpacing),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobileDevice ? 10.0 : 12.0,
+                    vertical: isMobileDevice ? 4.0 : 6.0,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(
+                      fieldBorderRadius * 0.5,
+                    ),
                     border: Border.all(color: Colors.red.withOpacity(0.3)),
                   ),
                   child: Row(
@@ -351,71 +665,90 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
                       Icon(
                         UniconsLine.exclamation_triangle,
                         color: Colors.redAccent,
-                        size: isMobile ? 14 : 16,
+                        size: smallFontSize * 1.2,
                       ),
-                      const SizedBox(width: 6),
+                      SizedBox(width: isMobileDevice ? 4.0 : 6.0),
                       Expanded(
                         child: Text(
                           phoneError!,
                           style: TextStyle(
                             color: Colors.redAccent,
-                            fontSize: isMobile ? 12 : 13,
+                            fontSize: smallFontSize,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
                 ),
               ],
-
-              const SizedBox(height: 24),
+              SizedBox(height: elementSpacing),
 
               /// Phone Preview
               if (phoneNumber != null &&
                   phoneNumber!.length == 10 &&
                   phoneError == null)
                 Container(
-                  padding: EdgeInsets.all(isMobile ? 12 : 16),
+                  padding: EdgeInsets.all(isMobileDevice ? 10.0 : 14.0),
                   decoration: BoxDecoration(
                     color: Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(fieldBorderRadius),
                     border: Border.all(color: Colors.green.withOpacity(0.3)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.check_circle,
                         color: Colors.green,
-                        size: 20,
+                        size: buttonIconSize,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        "OTP will be sent to +91 $phoneNumber",
-                        style: TextStyle(
-                          color: Colors.greenAccent,
-                          fontSize: isMobile ? 13 : 14,
-                          fontWeight: FontWeight.w500,
+                      SizedBox(width: isMobileDevice ? 6.0 : 8.0),
+                      Flexible(
+                        child: Text(
+                          isMobileDevice
+                              ? "OTP to sent +91 $phoneNumber"
+                              : "OTP will be sent to +91 $phoneNumber",
+                          style: TextStyle(
+                            color: Colors.greenAccent,
+                            fontSize: bodyFontSize,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       ),
                     ],
                   ),
                 ),
-
-              const SizedBox(height: 24),
+              SizedBox(height: elementSpacing),
 
               /// Send OTP Button
-              _buildSendOtpButton(context, isMobile, state),
-
-              const SizedBox(height: 16),
+              _buildSendOtpButton(
+                context,
+                isMobile: isMobileDevice,
+                buttonHeight: buttonHeight,
+                bodyFontSize: bodyFontSize,
+                buttonIconSize: buttonIconSize,
+                buttonBorderRadius: buttonBorderRadius,
+                state: state,
+              ),
+              SizedBox(height: elementSpacing * 0.8),
 
               /// Back Button
-              _buildBackButton(isMobile),
-
-              const SizedBox(height: 12),
+              _buildBackButton(
+                isMobile: isMobileDevice,
+                smallFontSize: smallFontSize,
+              ),
+              SizedBox(height: elementSpacing * 0.6),
 
               /// Info Text
-              _buildInfoText(isMobile),
+              _buildInfoText(
+                isMobile: isMobileDevice,
+                smallFontSize: smallFontSize,
+                fieldBorderRadius: fieldBorderRadius,
+              ),
             ],
           ),
         ),
@@ -423,53 +756,90 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
     );
   }
 
-  Widget _buildCountryCode(bool isMobile) {
+  Widget _buildCountryCode({
+    required bool isMobile,
+    required bool isTablet,
+    required double bodyFontSize,
+    required double iconSize,
+    required double fieldBorderRadius,
+    required AuthState state,
+  }) {
+    final double horizontalPadding = isMobile ? 12.0 : (isTablet ? 16.0 : 18.0);
+    final double verticalPadding = isMobile ? 13.0 : (isTablet ? 15.0 : 17.0);
+
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 16 : 18,
-        vertical: isMobile ? 16 : 18,
-      ),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withOpacity(0.15),
-            Colors.white.withOpacity(0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.phone_outlined,
-            size: isMobile ? 18 : 20,
-            color: Colors.white,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            "+91",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: isMobile ? 16 : 18,
-            ),
+        borderRadius: BorderRadius.circular(fieldBorderRadius),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.purple.withOpacity(0.1),
+            blurRadius: 10.0,
+            spreadRadius: 2.0,
           ),
         ],
+      ),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding,
+          vertical: verticalPadding,
+        ),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.white.withOpacity(0.15),
+              Colors.white.withOpacity(0.05),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(fieldBorderRadius),
+          border: Border.all(
+            color: Colors.white.withOpacity(state is AuthLoading ? 0.3 : 0.2),
+            width: 1.0,
+          ),
+        ),
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.phone_outlined,
+                size: iconSize,
+                color: state is AuthLoading ? Colors.white54 : Colors.white70,
+              ),
+              SizedBox(width: isMobile ? 6.0 : 8.0),
+              Text(
+                "+91",
+                style: TextStyle(
+                  color: state is AuthLoading ? Colors.white54 : Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: bodyFontSize,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildPhoneField(bool isMobile, AuthState state) {
+  Widget _buildPhoneField({
+    required bool isMobile,
+    required bool isTablet,
+    required double bodyFontSize,
+    required double iconSize,
+    required double fieldBorderRadius,
+    required AuthState state,
+  }) {
+    final double horizontalPadding = isMobile ? 12.0 : (isTablet ? 16.0 : 18.0);
+
     return Container(
+      height: 56.0,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(fieldBorderRadius),
         boxShadow: [
           BoxShadow(
             color: Colors.purple.withOpacity(0.1),
-            blurRadius: 10,
-            spreadRadius: 2,
+            blurRadius: 10.0,
+            spreadRadius: 2.0,
           ),
         ],
       ),
@@ -483,75 +853,69 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
           FilteringTextInputFormatter.digitsOnly,
           LengthLimitingTextInputFormatter(10),
         ],
-        style: const TextStyle(color: Colors.white, fontSize: 16),
+        style: TextStyle(color: Colors.white, fontSize: bodyFontSize),
         cursorColor: Colors.white,
+        textAlignVertical: TextAlignVertical.center,
         decoration: InputDecoration(
           counterText: "",
-
           prefixIcon: Icon(
             Icons.phone_outlined,
             color: Colors.white70,
-            size: isMobile ? 20 : 22,
+            size: iconSize,
           ),
-
           suffixIcon: phoneController.text.length == 10
-              ? const Icon(Icons.check_circle, color: Colors.green, size: 20)
+              ? Icon(Icons.check_circle, color: Colors.green, size: iconSize)
               : null,
-
-          hintText: "Enter 10-digit number",
+          hintText: isMobile ? "10-digit number" : "Enter 10-digit number",
           hintStyle: TextStyle(
             color: Colors.white54,
-            fontSize: isMobile ? 14 : 15,
+            fontSize: bodyFontSize * 0.95,
           ),
-
           filled: true,
           fillColor: Colors.white.withOpacity(0.08),
-
           contentPadding: EdgeInsets.symmetric(
-            horizontal: isMobile ? 16 : 20,
-            vertical: isMobile ? 16 : 18,
+            horizontal: horizontalPadding,
+            vertical: 0.0,
           ),
-
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(fieldBorderRadius),
+            borderSide: BorderSide.none,
+          ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(fieldBorderRadius),
             borderSide: BorderSide(
               color: Colors.white.withOpacity(0.15),
-              width: 1,
+              width: 1.0,
             ),
           ),
-
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(fieldBorderRadius),
             borderSide: const BorderSide(
               color: Color.fromARGB(255, 219, 219, 219),
-              width: 2,
+              width: 2.0,
             ),
           ),
-
           errorText: phoneError,
-
-          errorStyle: const TextStyle(color: Colors.redAccent, fontSize: 12),
-
+          errorStyle: TextStyle(
+            color: Colors.redAccent,
+            fontSize: bodyFontSize * 0.9,
+          ),
           errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(fieldBorderRadius),
             borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
           ),
-
           focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+            borderRadius: BorderRadius.circular(fieldBorderRadius),
+            borderSide: const BorderSide(color: Colors.redAccent, width: 2.0),
           ),
+          isDense: true,
         ),
-
         onChanged: (value) {
           if (phoneError != null) {
             setState(() {
               phoneError = null;
             });
           }
-
           setState(() {
             phoneNumber = value;
           });
@@ -561,17 +925,21 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
   }
 
   Widget _buildSendOtpButton(
-    BuildContext context,
-    bool isMobile,
-    AuthState state,
-  ) {
+    BuildContext context, {
+    required bool isMobile,
+    required double buttonHeight,
+    required double bodyFontSize,
+    required double buttonIconSize,
+    required double buttonBorderRadius,
+    required AuthState state,
+  }) {
     return Container(
       width: double.infinity,
-      height: isMobile ? 52 : 56,
+      height: buttonHeight,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(buttonBorderRadius),
         gradient: const LinearGradient(
-          colors: [Color(0xFF7F00FF), Color(0xFFE100FF)],
+          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
         ),
       ),
       child: ElevatedButton(
@@ -580,27 +948,27 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(buttonBorderRadius),
           ),
         ),
         child: state is AuthLoading
             ? Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: CircularProgressIndicator(
+                  SizedBox(
+                    height: buttonIconSize,
+                    width: buttonIconSize,
+                    child: const CircularProgressIndicator(
                       strokeWidth: 2.5,
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: isMobile ? 8.0 : 12.0),
                   Text(
-                    "Sending OTP...",
+                    isMobile ? "Sending..." : "Sending OTP...",
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: isMobile ? 15 : 16,
+                      fontSize: bodyFontSize,
                     ),
                   ),
                 ],
@@ -611,13 +979,13 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
                   Icon(
                     UniconsLine.message,
                     color: Colors.white,
-                    size: isMobile ? 18 : 20,
+                    size: buttonIconSize,
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: isMobile ? 8.0 : 10.0),
                   Text(
-                    "Send OTP",
+                    isMobile ? "Send" : "Send OTP",
                     style: TextStyle(
-                      fontSize: isMobile ? 15 : 16,
+                      fontSize: bodyFontSize,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       letterSpacing: 0.5,
@@ -629,12 +997,18 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
     );
   }
 
-  Widget _buildBackButton(bool isMobile) {
+  Widget _buildBackButton({
+    required bool isMobile,
+    required double smallFontSize,
+  }) {
     return Center(
       child: TextButton(
         onPressed: () => Navigator.pop(context),
         style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+          padding: EdgeInsets.symmetric(
+            vertical: isMobile ? 8.0 : 12.0,
+            horizontal: isMobile ? 16.0 : 20.0,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -642,15 +1016,12 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
             Icon(
               UniconsLine.arrow_left,
               color: Colors.white70,
-              size: isMobile ? 18 : 20,
+              size: smallFontSize * 1.3,
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: isMobile ? 4.0 : 6.0),
             Text(
-              "Back to Login",
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: isMobile ? 14 : 15,
-              ),
+              isMobile ? "Back" : "Back to Login",
+              style: TextStyle(color: Colors.white70, fontSize: smallFontSize),
             ),
           ],
         ),
@@ -658,28 +1029,36 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
     );
   }
 
-  Widget _buildInfoText(bool isMobile) {
+  Widget _buildInfoText({
+    required bool isMobile,
+    required double smallFontSize,
+    required double fieldBorderRadius,
+  }) {
     return Container(
-      padding: EdgeInsets.all(isMobile ? 12 : 16),
+      padding: EdgeInsets.all(isMobile ? 10.0 : 14.0),
       decoration: BoxDecoration(
         color: Colors.blue.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(fieldBorderRadius * 0.6),
       ),
       child: Row(
         children: [
           Icon(
             UniconsLine.info_circle,
             color: Colors.blueAccent,
-            size: isMobile ? 16 : 18,
+            size: smallFontSize * 1.2,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: isMobile ? 6.0 : 8.0),
           Expanded(
             child: Text(
-              "You'll receive a 6-digit OTP via SMS to verify your number",
+              isMobile
+                  ? "You'll receive a 6-digit OTP via SMS"
+                  : "You'll receive a 6-digit OTP via SMS to verify your number",
               style: TextStyle(
                 color: Colors.blueAccent.shade100,
-                fontSize: isMobile ? 11 : 12,
+                fontSize: smallFontSize * 0.9,
               ),
+              maxLines: isMobile ? 2 : 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -687,38 +1066,47 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
     );
   }
 
-  Widget _buildFooter(bool isMobile) {
+  Widget _buildFooter({
+    required double smallFontSize,
+    required bool isMobileDevice,
+  }) {
     return Column(
       children: [
         Text(
-          "By continuing, you agree to our",
-          style: TextStyle(color: Colors.white54, fontSize: isMobile ? 11 : 12),
+          isMobileDevice
+              ? "By continuing, you agree to our"
+              : "By continuing, you agree to our",
+          style: TextStyle(
+            color: Colors.white54,
+            fontSize: smallFontSize * 0.9,
+          ),
         ),
-        const SizedBox(height: 4),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        const SizedBox(height: 4.0),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 4.0,
           children: [
             Text(
-              "Terms of Service",
+              "Terms",
               style: TextStyle(
                 color: Colors.white70,
-                fontSize: isMobile ? 11 : 12,
+                fontSize: smallFontSize * 0.9,
                 fontWeight: FontWeight.w500,
                 decoration: TextDecoration.underline,
               ),
             ),
             Text(
-              " and ",
+              " & ",
               style: TextStyle(
                 color: Colors.white54,
-                fontSize: isMobile ? 11 : 12,
+                fontSize: smallFontSize * 0.9,
               ),
             ),
             Text(
-              "Privacy Policy",
+              "Privacy",
               style: TextStyle(
                 color: Colors.white70,
-                fontSize: isMobile ? 11 : 12,
+                fontSize: smallFontSize * 0.9,
                 fontWeight: FontWeight.w500,
                 decoration: TextDecoration.underline,
               ),

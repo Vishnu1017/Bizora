@@ -22,11 +22,12 @@ class AuthSuccess extends AuthState {
 
 class OtpSent extends AuthState {
   final String verificationId;
+  final String phoneNumber;
 
-  const OtpSent(this.verificationId);
+  const OtpSent({required this.verificationId, required this.phoneNumber});
 
   @override
-  List<Object> get props => [verificationId];
+  List<Object> get props => [verificationId, phoneNumber];
 }
 
 class AuthFailure extends AuthState {

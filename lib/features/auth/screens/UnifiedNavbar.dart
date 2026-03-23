@@ -1007,7 +1007,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                       child: Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: horizontalPadding,
-                          vertical: isMobile(width) ? 8 : 12,
+                          vertical: getResponsiveSpacing(width) * 0.75,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.5),
@@ -1035,45 +1035,71 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                         padding: EdgeInsets.symmetric(
                                           horizontal:
                                               getResponsiveSpacing(width) *
-                                              0.50,
+                                              0.75,
                                           vertical:
-                                              getResponsiveSpacing(width) *
-                                              0.25,
+                                              getResponsiveSpacing(width) * 0.3,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: currentColor.withOpacity(0.1),
+                                          color: currentColor.withOpacity(
+                                            0.08,
+                                          ), // softer background
                                           borderRadius: BorderRadius.circular(
-                                            20,
+                                            22,
                                           ),
+
+                                          // subtle border (premium feel)
+                                          border: Border.all(
+                                            color: currentColor.withOpacity(
+                                              0.15,
+                                            ),
+                                            width: 1,
+                                          ),
+
+                                          // light shadow (very minimal)
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: currentColor.withOpacity(
+                                                0.08,
+                                              ),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
+                                            // 🔹 Icon
                                             Icon(
                                               _userRole == 'admin'
                                                   ? Icons
                                                         .admin_panel_settings_rounded
                                                   : Icons.store_rounded,
-                                              size:
-                                                  iconSize *
-                                                  0.6, // Reduced from 0.7 to prevent overflow
+                                              size: iconSize * 0.55,
                                               color: currentColor,
                                             ),
+
                                             SizedBox(
                                               width:
                                                   getResponsiveSpacing(width) *
-                                                  0.3,
+                                                  0.25,
                                             ),
-                                            Text(
-                                              _getTitlePrefix(),
-                                              style: TextStyle(
-                                                fontSize:
-                                                    getResponsiveFontSize(
-                                                      width,
-                                                    ) *
-                                                    0.75, // Slightly smaller
-                                                color: currentColor,
-                                                fontWeight: FontWeight.w600,
+                                            // 🔹 Text
+                                            Flexible(
+                                              child: Text(
+                                                _getTitlePrefix(),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  fontSize:
+                                                      getResponsiveFontSize(
+                                                        width,
+                                                      ) *
+                                                      0.75,
+                                                  color: currentColor,
+                                                  fontWeight: FontWeight.w600,
+                                                  letterSpacing: 0.2,
+                                                ),
                                               ),
                                             ),
                                           ],

@@ -75,12 +75,24 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
   // Nav items based on role and mode
   List<NavItem> _navItems = [];
 
+  // Responsive breakpoints
+  static const double mobileBreakpoint = 600;
+  static const double tabletBreakpoint = 900;
+  static const double desktopBreakpoint = 1200;
+  static const double largeDesktopBreakpoint = 1600;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initializeAnimations();
-    _cachedGreeting = _getGreeting();
+
+    // Initialize greeting after first frame to avoid MediaQuery dependency
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _cachedGreeting = _getGreeting();
+      }
+    });
 
     // Initialize with default customer navigation first
     _initializeDefaultNavigation();
@@ -192,6 +204,76 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
     _fadeController.forward();
     _slideController.forward();
     _scaleController.forward();
+  }
+
+  // Helper methods for responsive design
+  bool isMobile(double width) => width < mobileBreakpoint;
+  bool isTablet(double width) =>
+      width >= mobileBreakpoint && width < desktopBreakpoint;
+  bool isDesktop(double width) =>
+      width >= desktopBreakpoint && width < largeDesktopBreakpoint;
+  bool isLargeDesktop(double width) => width >= largeDesktopBreakpoint;
+
+  double getResponsiveFontSize(
+    double width, {
+    double mobile = 12.0,
+    double tablet = 14.0,
+    double desktop = 16.0,
+    double largeDesktop = 18.0,
+  }) {
+    if (isLargeDesktop(width)) return largeDesktop;
+    if (isDesktop(width)) return desktop;
+    if (isTablet(width)) return tablet;
+    return mobile;
+  }
+
+  double getResponsiveSpacing(double width, {double factor = 1.0}) {
+    if (isLargeDesktop(width)) return 24.0 * factor;
+    if (isDesktop(width)) return 20.0 * factor;
+    if (isTablet(width)) return 16.0 * factor;
+    return 12.0 * factor;
+  }
+
+  double getResponsiveNavbarHeight(double width) {
+    if (isLargeDesktop(width)) return 84.0;
+    if (isDesktop(width)) return 76.0;
+    if (isTablet(width)) return 68.0;
+    return 60.0;
+  }
+
+  double getResponsiveIconSize(double width) {
+    if (isLargeDesktop(width)) return 28.0;
+    if (isDesktop(width)) return 24.0;
+    if (isTablet(width)) return 22.0;
+    return 20.0;
+  }
+
+  double getResponsiveAvatarSize(double width) {
+    if (isLargeDesktop(width)) return 52.0;
+    if (isDesktop(width)) return 44.0;
+    if (isTablet(width)) return 40.0;
+    return 36.0;
+  }
+
+  double getResponsiveHorizontalPadding(double width) {
+    if (isLargeDesktop(width)) return 48.0;
+    if (isDesktop(width)) return 32.0;
+    if (isTablet(width)) return 24.0;
+    return 16.0;
+  }
+
+  double getResponsiveNavbarMargin(double width) {
+    if (isLargeDesktop(width)) return width * 0.3;
+    if (isDesktop(width)) return width * 0.25;
+    if (isTablet(width)) return width * 0.15;
+    return 16.0;
+  }
+
+  double getResponsiveBorderRadius(double width) {
+    if (isLargeDesktop(width)) return 28.0;
+    if (isDesktop(width)) return 24.0;
+    if (isTablet(width)) return 20.0;
+    return 16.0;
   }
 
   Future<void> _checkUserRole() async {
@@ -718,7 +800,18 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
   }
 
   Widget _getGreeting() {
+    final width = MediaQuery.of(context).size.width;
     final hour = DateTime.now().hour;
+
+    // Responsive text and icon sizes
+    final double textSize = getResponsiveFontSize(
+      width,
+      mobile: 11,
+      tablet: 12,
+      desktop: 13,
+      largeDesktop: 14,
+    );
+    final double iconSize = getResponsiveIconSize(width) * 0.6;
 
     String text;
     IconData iconData;
@@ -730,7 +823,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
       iconColor = Colors.amber;
     } else if (hour < 17) {
       text = "Good Afternoon";
-      iconData = Icons.wb_cloudy;
+      iconData = Icons.cloud_queue;
       iconColor = Colors.blue;
     } else if (hour < 22) {
       text = "Good Evening";
@@ -738,7 +831,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
       iconColor = Colors.indigo;
     } else {
       text = "Good Night";
-      iconData = Icons.stars;
+      iconData = Icons.star;
       iconColor = Colors.purple;
     }
 
@@ -748,18 +841,14 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
         Text(
           text,
           style: TextStyle(
-            fontSize: 13,
+            fontSize: textSize,
             color: Colors.grey[600],
             fontWeight: FontWeight.w500,
+            letterSpacing: 0.2,
           ),
         ),
-        const SizedBox(width: 4),
-        Icon(
-          // ✅ Wrap IconData in Icon widget
-          iconData,
-          color: iconColor,
-          size: 18,
-        ),
+        SizedBox(width: getResponsiveSpacing(width) * 0.3),
+        Icon(iconData, color: iconColor, size: iconSize),
       ],
     );
   }
@@ -778,7 +867,9 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
     if (_userRole == 'admin' || _isOwnerMode) {
       return _navItems[_currentIndex].label;
     }
-    return _userName.split(' ')[0];
+    // For customer mode, show first name
+    final firstName = _userName.split(' ')[0];
+    return firstName.isEmpty ? 'User' : firstName;
   }
 
   @override
@@ -806,19 +897,15 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
     final height = media.size.height;
     final padding = media.padding;
 
-    // Responsive breakpoints
-    final isMobile = width < 600;
-    final isTablet = width >= 600 && width < 900;
-    final isDesktop = width >= 900;
-
-    // Dynamic sizing
-    final horizontalPadding = isDesktop ? 32.0 : (isTablet ? 24.0 : 16.0);
-    final navbarHeight = isMobile ? 60.0 : (isTablet ? 68.0 : 76.0);
-    final iconSize = isMobile ? 20.0 : (isTablet ? 22.0 : 24.0);
-    final avatarSize = isMobile ? 36.0 : (isTablet ? 40.0 : 44.0);
+    // Responsive values using helper methods
+    final horizontalPadding = getResponsiveHorizontalPadding(width);
+    final navbarHeight = getResponsiveNavbarHeight(width);
+    final iconSize = getResponsiveIconSize(width);
+    final avatarSize = getResponsiveAvatarSize(width);
     final bottomPadding = padding.bottom > 0
         ? padding.bottom
-        : (isMobile ? 8.0 : 12.0);
+        : getResponsiveSpacing(width);
+    final navbarMargin = getResponsiveNavbarMargin(width);
 
     final currentColor = _navItems[_currentIndex].color;
     final bool hideAppBarForAdmin =
@@ -890,18 +977,16 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
           ? null
           : PreferredSize(
               preferredSize: Size.fromHeight(
-                _isAppBarExpanded
-                    ? (isMobile ? 100 : 120)
-                    : (isMobile ? 80 : 90),
+                _isAppBarExpanded ? (navbarHeight * 1.6) : (navbarHeight * 1.3),
               ),
               child: SafeArea(
                 bottom: false,
                 child: Container(
                   margin: EdgeInsets.fromLTRB(
                     horizontalPadding,
-                    12,
+                    getResponsiveSpacing(width),
                     horizontalPadding,
-                    8,
+                    getResponsiveSpacing(width) * 0.7,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.7),
@@ -922,7 +1007,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                       child: Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: horizontalPadding,
-                          vertical: isMobile ? 8 : 12,
+                          vertical: isMobile(width) ? 8 : 12,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.5),
@@ -940,14 +1025,20 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize
+                                      .min, // Add this to prevent overflow
                                   children: [
                                     if (_userRole == 'admin' ||
                                         _isOwnerMode) ...[
                                       // Admin/Owner mode - show role badge
                                       Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 4,
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              getResponsiveSpacing(width) *
+                                              0.50,
+                                          vertical:
+                                              getResponsiveSpacing(width) *
+                                              0.25,
                                         ),
                                         decoration: BoxDecoration(
                                           color: currentColor.withOpacity(0.1),
@@ -963,14 +1054,24 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                                   ? Icons
                                                         .admin_panel_settings_rounded
                                                   : Icons.store_rounded,
-                                              size: 16,
+                                              size:
+                                                  iconSize *
+                                                  0.6, // Reduced from 0.7 to prevent overflow
                                               color: currentColor,
                                             ),
-                                            const SizedBox(width: 6),
+                                            SizedBox(
+                                              width:
+                                                  getResponsiveSpacing(width) *
+                                                  0.3,
+                                            ),
                                             Text(
                                               _getTitlePrefix(),
                                               style: TextStyle(
-                                                fontSize: isMobile ? 12 : 13,
+                                                fontSize:
+                                                    getResponsiveFontSize(
+                                                      width,
+                                                    ) *
+                                                    0.75, // Slightly smaller
                                                 color: currentColor,
                                                 fontWeight: FontWeight.w600,
                                               ),
@@ -978,36 +1079,44 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                           ],
                                         ),
                                       ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        _getPageTitle(),
-                                        style: TextStyle(
-                                          fontSize: isMobile
-                                              ? 20
-                                              : (isTablet ? 24 : 28),
-                                          fontWeight: FontWeight.bold,
-                                          color: currentColor,
-                                          letterSpacing: -0.5,
+                                      SizedBox(
+                                        height:
+                                            getResponsiveSpacing(width) * 0.3,
+                                      ), // Reduced spacing
+                                      Flexible(
+                                        child: Text(
+                                          _getPageTitle(),
+                                          style: TextStyle(
+                                            fontSize:
+                                                getResponsiveFontSize(width) *
+                                                1.25, // Reduced from 1.8
+                                            fontWeight: FontWeight.bold,
+                                            color: currentColor,
+                                            letterSpacing: -0.5,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     ] else ...[
                                       // Customer mode - show greeting and name
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [_getGreeting()],
+                                      _getGreeting(),
+                                      SizedBox(
+                                        height:
+                                            getResponsiveSpacing(width) * 0.3,
                                       ),
-                                      const SizedBox(height: 4),
                                       Text(
                                         _getPageTitle(),
                                         style: TextStyle(
-                                          fontSize: isMobile
-                                              ? 20
-                                              : (isTablet ? 24 : 28),
+                                          fontSize:
+                                              getResponsiveFontSize(width) *
+                                              1.25,
                                           fontWeight: FontWeight.bold,
                                           color: currentColor,
                                           letterSpacing: -0.5,
                                         ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ],
@@ -1023,14 +1132,16 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                     (_hasAppliedForOwner || _isOwner)) ...[
                                   if (_applicationStatus == 'approved' ||
                                       _isOwner)
-                                    _buildOwnerButton(isMobile)
+                                    _buildOwnerButton(isMobile(width))
                                   else if (_applicationStatus == 'pending')
-                                    _buildPendingButton(isMobile)
+                                    _buildPendingButton(isMobile(width))
                                   else if (_applicationStatus == 'rejected')
-                                    _buildRejectedButton(isMobile)
+                                    _buildRejectedButton(isMobile(width))
                                   else if (_hasAppliedForOwner)
-                                    _buildAppliedButton(isMobile),
-                                  const SizedBox(width: 8),
+                                    _buildAppliedButton(isMobile(width)),
+                                  SizedBox(
+                                    width: getResponsiveSpacing(width) * 0.15,
+                                  ),
                                 ],
 
                                 // Notification
@@ -1040,7 +1151,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                       icon: Icon(
                                         Icons.notifications_none,
                                         color: _navItems[_currentIndex].color,
-                                        size: isMobile ? 22 : 24,
+                                        size: iconSize,
                                       ),
                                       onPressed: () {},
                                     ),
@@ -1059,7 +1170,9 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                   ],
                                 ),
 
-                                const SizedBox(width: 4),
+                                SizedBox(
+                                  width: getResponsiveSpacing(width) * 0.3,
+                                ),
 
                                 /// Profile Avatar
                                 GestureDetector(
@@ -1128,10 +1241,14 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
           removeBottom: true,
           child: Container(
             margin: EdgeInsets.fromLTRB(
-              isDesktop ? width * 0.25 : horizontalPadding,
+              isDesktop(width) || isLargeDesktop(width)
+                  ? navbarMargin
+                  : horizontalPadding,
               0,
-              isDesktop ? width * 0.25 : horizontalPadding,
-              8,
+              isDesktop(width) || isLargeDesktop(width)
+                  ? navbarMargin
+                  : horizontalPadding,
+              getResponsiveSpacing(width) * 0.7,
             ),
             height: navbarHeight,
             child: ClipRRect(
@@ -1172,7 +1289,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                 ),
                                 child: Icon(
                                   selected ? item.selectedIcon : item.icon,
-                                  size: iconSize,
+                                  size: iconSize * 0.9,
                                   color: selected ? item.color : Colors.grey,
                                 ),
                               ),
@@ -1180,7 +1297,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                               Text(
                                 item.shortLabel,
                                 style: TextStyle(
-                                  fontSize: 10,
+                                  fontSize: getResponsiveFontSize(width) * 0.7,
                                   fontWeight: selected
                                       ? FontWeight.w600
                                       : FontWeight.normal,
@@ -1205,6 +1322,12 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
   // Button builders
 
   Widget _buildOwnerButton(bool isMobile) {
+    final width = MediaQuery.of(context).size.width;
+    final double buttonHorizontalPadding = isMobile ? 10.0 : 14.0;
+    final double buttonVerticalPadding = isMobile ? 5.0 : 8.0;
+    final double iconSize = getResponsiveIconSize(width) * 0.6;
+    final double fontSize = getResponsiveFontSize(width) * 0.75;
+
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: const Duration(milliseconds: 500),
@@ -1215,9 +1338,10 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
       child: GestureDetector(
         onTap: _handleOwnerButtonPress,
         child: Container(
+          margin: EdgeInsets.only(top: getResponsiveSpacing(width) * 1.75),
           padding: EdgeInsets.symmetric(
-            horizontal: isMobile ? 10 : 12,
-            vertical: isMobile ? 4 : 6,
+            horizontal: buttonHorizontalPadding,
+            vertical: buttonVerticalPadding,
           ),
           decoration: BoxDecoration(
             gradient: _isOwnerMode
@@ -1231,14 +1355,16 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(
+              getResponsiveBorderRadius(width) * 0.75,
+            ),
             boxShadow: [
               BoxShadow(
                 color: _isOwnerMode
-                    ? Colors.purple.withOpacity(0.3)
-                    : Colors.orange.withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                    ? Colors.purple.withOpacity(0.25)
+                    : Colors.orange.withOpacity(0.25),
+                blurRadius: getResponsiveBorderRadius(width) * 0.25,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
@@ -1248,14 +1374,14 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
               Icon(
                 _isOwnerMode ? Icons.person : Icons.storefront,
                 color: Colors.white,
-                size: isMobile ? 16 : 18,
+                size: iconSize,
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: getResponsiveSpacing(width) * 0.3),
               Text(
                 _isOwnerMode ? 'Customer' : 'Owner',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: isMobile ? 11 : 12,
+                  fontSize: fontSize,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1267,39 +1393,48 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
   }
 
   Widget _buildPendingButton(bool isMobile) {
+    final width = MediaQuery.of(context).size.width;
+    final double buttonHorizontalPadding = isMobile ? 10.0 : 14.0;
+    final double buttonVerticalPadding = isMobile ? 5.0 : 8.0;
+    final double iconSize = getResponsiveIconSize(width) * 0.5;
+    final double fontSize = getResponsiveFontSize(width) * 0.7;
+
     return GestureDetector(
       onTap: _handleOwnerButtonPress,
       child: ScaleTransition(
         scale: _pulseAnimation,
         child: Container(
+          margin: EdgeInsets.only(top: getResponsiveSpacing(width) * 1.75),
           padding: EdgeInsets.symmetric(
-            horizontal: isMobile ? 10 : 12,
-            vertical: isMobile ? 4 : 6,
+            horizontal: buttonHorizontalPadding,
+            vertical: buttonVerticalPadding,
           ),
           decoration: BoxDecoration(
             color: Colors.orange.shade50,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.orange.shade300),
+            borderRadius: BorderRadius.circular(
+              getResponsiveBorderRadius(width) * 0.75,
+            ),
+            border: Border.all(color: Colors.orange.shade300, width: 1),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                width: isMobile ? 14 : 16,
-                height: isMobile ? 14 : 16,
+                width: iconSize,
+                height: iconSize,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
+                  strokeWidth: 1.8,
                   valueColor: AlwaysStoppedAnimation<Color>(
                     Colors.orange.shade700,
                   ),
                 ),
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: getResponsiveSpacing(width) * 0.3),
               Text(
                 isMobile ? 'Review' : 'Under Review',
                 style: TextStyle(
-                  color: Colors.orange,
-                  fontSize: isMobile ? 10 : 11,
+                  color: Colors.orange.shade700,
+                  fontSize: fontSize,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1311,17 +1446,26 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
   }
 
   Widget _buildRejectedButton(bool isMobile) {
+    final width = MediaQuery.of(context).size.width;
+    final double buttonHorizontalPadding = isMobile ? 10.0 : 14.0;
+    final double buttonVerticalPadding = isMobile ? 5.0 : 8.0;
+    final double iconSize = getResponsiveIconSize(width) * 0.5;
+    final double fontSize = getResponsiveFontSize(width) * 0.7;
+
     return GestureDetector(
       onTap: _handleOwnerButtonPress,
       child: Container(
+        margin: EdgeInsets.only(top: getResponsiveSpacing(width) * 1.75),
         padding: EdgeInsets.symmetric(
-          horizontal: isMobile ? 10 : 12,
-          vertical: isMobile ? 4 : 6,
+          horizontal: buttonHorizontalPadding,
+          vertical: buttonVerticalPadding,
         ),
         decoration: BoxDecoration(
           color: Colors.red.shade50,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.red.shade300),
+          borderRadius: BorderRadius.circular(
+            getResponsiveBorderRadius(width) * 0.75,
+          ),
+          border: Border.all(color: Colors.red.shade300, width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1329,14 +1473,14 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
             Icon(
               Icons.error_outline,
               color: Colors.red.shade700,
-              size: isMobile ? 12 : 14,
+              size: iconSize,
             ),
-            const SizedBox(width: 4),
+            SizedBox(width: getResponsiveSpacing(width) * 0.3),
             Text(
               'Rejected',
               style: TextStyle(
                 color: Colors.red.shade700,
-                fontSize: isMobile ? 10 : 11,
+                fontSize: fontSize,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1347,17 +1491,26 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
   }
 
   Widget _buildAppliedButton(bool isMobile) {
+    final width = MediaQuery.of(context).size.width;
+    final double buttonHorizontalPadding = isMobile ? 10.0 : 14.0;
+    final double buttonVerticalPadding = isMobile ? 5.0 : 8.0;
+    final double iconSize = getResponsiveIconSize(width) * 0.5;
+    final double fontSize = getResponsiveFontSize(width) * 0.7;
+
     return GestureDetector(
       onTap: _handleOwnerButtonPress,
       child: Container(
+        margin: EdgeInsets.only(top: getResponsiveSpacing(width) * 1.75),
         padding: EdgeInsets.symmetric(
-          horizontal: isMobile ? 10 : 12,
-          vertical: isMobile ? 4 : 6,
+          horizontal: buttonHorizontalPadding,
+          vertical: buttonVerticalPadding,
         ),
         decoration: BoxDecoration(
           color: Colors.blue.shade50,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.blue.shade300),
+          borderRadius: BorderRadius.circular(
+            getResponsiveBorderRadius(width) * 0.75,
+          ),
+          border: Border.all(color: Colors.blue.shade300, width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1365,14 +1518,14 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
             Icon(
               Icons.access_time,
               color: Colors.blue.shade700,
-              size: isMobile ? 12 : 14,
+              size: iconSize,
             ),
-            const SizedBox(width: 4),
+            SizedBox(width: getResponsiveSpacing(width) * 0.3),
             Text(
               'Applied',
               style: TextStyle(
                 color: Colors.blue.shade700,
-                fontSize: isMobile ? 10 : 11,
+                fontSize: fontSize,
                 fontWeight: FontWeight.w600,
               ),
             ),

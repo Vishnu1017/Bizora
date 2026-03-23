@@ -5,6 +5,7 @@ import 'package:bizora/features/auth/screens/splash_screen.dart';
 import 'package:bizora/features/customer/screens/become_seller_info.dart';
 import 'package:bizora/services/security_service.dart';
 import 'package:bizora/services/upload_service.dart';
+import 'package:bizora/widgets/logout_confirmation_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -38,8 +39,10 @@ class _ProfilePageState extends State<ProfilePage>
 
   // Responsive breakpoints
   static const double mobileBreakpoint = 600;
+  static const double tabletBreakpoint = 900;
   static const double desktopBreakpoint = 1100;
   static const double largeDesktopBreakpoint = 1600;
+  static const double ultraWideBreakpoint = 2000;
 
   // User data
   User? _user;
@@ -87,15 +90,30 @@ class _ProfilePageState extends State<ProfilePage>
   // Helper methods for responsive design
   bool isMobile(double width) => width < mobileBreakpoint;
   bool isTablet(double width) =>
-      width >= mobileBreakpoint && width < desktopBreakpoint;
+      width >= mobileBreakpoint && width < tabletBreakpoint;
+  bool isSmallDesktop(double width) =>
+      width >= tabletBreakpoint && width < desktopBreakpoint;
   bool isDesktop(double width) =>
       width >= desktopBreakpoint && width < largeDesktopBreakpoint;
-  bool isLargeDesktop(double width) => width >= largeDesktopBreakpoint;
+  bool isLargeDesktop(double width) =>
+      width >= largeDesktopBreakpoint && width < ultraWideBreakpoint;
+  bool isUltraWide(double width) => width >= ultraWideBreakpoint;
 
   double getResponsiveHorizontalPadding(double width) {
+    if (isUltraWide(width)) return width * 0.35;
     if (isLargeDesktop(width)) return width * 0.3;
     if (isDesktop(width)) return width * 0.25;
+    if (isSmallDesktop(width)) return width * 0.2;
     if (isTablet(width)) return width * 0.15;
+    return 20.0;
+  }
+
+  double getResponsiveVerticalSpacing(double width) {
+    if (isUltraWide(width)) return 40.0;
+    if (isLargeDesktop(width)) return 36.0;
+    if (isDesktop(width)) return 32.0;
+    if (isSmallDesktop(width)) return 28.0;
+    if (isTablet(width)) return 24.0;
     return 20.0;
   }
 
@@ -103,18 +121,60 @@ class _ProfilePageState extends State<ProfilePage>
     double width, {
     double mobile = 14.0,
     double tablet = 15.0,
-    double desktop = 16.0,
+    double smallDesktop = 16.0,
+    double desktop = 17.0,
     double largeDesktop = 18.0,
+    double ultraWide = 20.0,
   }) {
+    if (isUltraWide(width)) return ultraWide;
     if (isLargeDesktop(width)) return largeDesktop;
     if (isDesktop(width)) return desktop;
+    if (isSmallDesktop(width)) return smallDesktop;
     if (isTablet(width)) return tablet;
     return mobile;
   }
 
+  double getResponsiveIconSize(double width) {
+    if (isUltraWide(width)) return 32.0;
+    if (isLargeDesktop(width)) return 28.0;
+    if (isDesktop(width)) return 24.0;
+    if (isSmallDesktop(width)) return 22.0;
+    if (isTablet(width)) return 20.0;
+    return 18.0;
+  }
+
+  double getResponsiveAvatarSize(double width) {
+    if (isUltraWide(width)) return 80.0;
+    if (isLargeDesktop(width)) return 70.0;
+    if (isDesktop(width)) return 60.0;
+    if (isSmallDesktop(width)) return 52.0;
+    if (isTablet(width)) return 48.0;
+    return 40.0;
+  }
+
+  double getResponsiveBorderRadius(double width) {
+    if (isUltraWide(width)) return 32.0;
+    if (isLargeDesktop(width)) return 28.0;
+    if (isDesktop(width)) return 24.0;
+    if (isSmallDesktop(width)) return 22.0;
+    if (isTablet(width)) return 20.0;
+    return 16.0;
+  }
+
+  double getResponsiveCardSpacing(double width) {
+    if (isUltraWide(width)) return 20.0;
+    if (isLargeDesktop(width)) return 18.0;
+    if (isDesktop(width)) return 16.0;
+    if (isSmallDesktop(width)) return 14.0;
+    if (isTablet(width)) return 12.0;
+    return 10.0;
+  }
+
   EdgeInsets getResponsiveInsets(double width) {
-    if (isLargeDesktop(width)) return const EdgeInsets.all(28.0);
-    if (isDesktop(width)) return const EdgeInsets.all(24.0);
+    if (isUltraWide(width)) return const EdgeInsets.all(36.0);
+    if (isLargeDesktop(width)) return const EdgeInsets.all(32.0);
+    if (isDesktop(width)) return const EdgeInsets.all(28.0);
+    if (isSmallDesktop(width)) return const EdgeInsets.all(24.0);
     if (isTablet(width)) return const EdgeInsets.all(20.0);
     return const EdgeInsets.all(16.0);
   }
@@ -162,12 +222,14 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   void _showSessionTimeoutDialog() {
+    final width = MediaQuery.of(context).size.width;
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.0),
+          borderRadius: BorderRadius.circular(getResponsiveBorderRadius(width)),
         ),
         title: const Text('Session Expired'),
         content: const Text(
@@ -609,9 +671,13 @@ class _ProfilePageState extends State<ProfilePage>
       final source = await showDialog<ImageSource>(
         context: context,
         builder: (BuildContext context) {
+          final width = MediaQuery.of(context).size.width;
+
           return AlertDialog(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20.0),
+              borderRadius: BorderRadius.circular(
+                getResponsiveBorderRadius(width),
+              ),
             ),
             title: const Text(
               'Profile Picture',
@@ -771,12 +837,16 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   void _removeProfilePicture() {
+    final width = MediaQuery.of(context).size.width;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
+            borderRadius: BorderRadius.circular(
+              getResponsiveBorderRadius(width),
+            ),
           ),
           title: const Text('Remove Profile Picture'),
           content: const Text(
@@ -882,12 +952,16 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   void _showPermissionDeniedDialog() {
+    final width = MediaQuery.of(context).size.width;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
+            borderRadius: BorderRadius.circular(
+              getResponsiveBorderRadius(width),
+            ),
           ),
           title: const Icon(
             Icons.warning_amber,
@@ -932,90 +1006,80 @@ class _ProfilePageState extends State<ProfilePage>
 
   // Add this logout function here
   Future<void> _logout(BuildContext context) async {
-    final shouldLogout = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.0),
-        ),
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
-    );
-
-    if (shouldLogout != true) return;
-
-    try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return const Center(
-            child: CircularProgressIndicator(color: Colors.deepPurple),
+    final shouldLogout = await showLogoutConfirmationDialog(
+      context,
+      title: 'Sign Out',
+      message: 'Are you sure you want to sign out of your account?',
+      confirmText: 'Sign Out',
+      cancelText: 'Cancel',
+      icon: Icons.person_rounded,
+      primaryColor: const Color(0xFFFF416C),
+      infoText: 'You will be redirected to the login screen',
+      onConfirm: () async {
+        try {
+          // Show loading indicator
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return const Center(
+                child: CircularProgressIndicator(color: Colors.deepPurple),
+              );
+            },
           );
-        },
-      );
 
-      // End session if exists
-      if (_sessionToken != null && _user != null) {
-        await _securityService.endSession(_user!.uid, _sessionToken!);
-      }
+          // End session if exists
+          if (_sessionToken != null && _user != null) {
+            await _securityService.endSession(_user!.uid, _sessionToken!);
+          }
 
-      // Clear secure storage
-      await _secureStorage.deleteAll();
+          // Clear secure storage
+          await _secureStorage.deleteAll();
 
-      // Sign out from Firebase
-      await FirebaseAuth.instance.signOut();
+          // Sign out from Firebase
+          await FirebaseAuth.instance.signOut();
 
-      // Sign out from Google (important for Google Sign-In)
-      final GoogleSignIn googleSignIn = GoogleSignIn();
-      if (await googleSignIn.isSignedIn()) {
-        await googleSignIn.disconnect();
-        await googleSignIn.signOut();
-      }
+          // Sign out from Google (important for Google Sign-In)
+          final GoogleSignIn googleSignIn = GoogleSignIn();
+          if (await googleSignIn.isSignedIn()) {
+            await googleSignIn.disconnect();
+            await googleSignIn.signOut();
+          }
 
-      // Close loading dialog
-      if (context.mounted) {
-        Navigator.pop(context); // Close loading dialog
+          // Close loading dialog
+          if (context.mounted) {
+            Navigator.pop(context); // Close loading dialog
 
-        // Navigate to splash screen
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const SplashScreen()),
-          (Route<dynamic> route) => false,
-        );
-      }
-    } catch (e) {
-      // Handle any errors
-      if (context.mounted) {
-        // Close loading dialog if it's showing
-        Navigator.pop(context);
-
-        // Show error message
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            FirebaseSnackbar.error(
+            // Navigate to splash screen
+            Navigator.pushAndRemoveUntil(
               context,
-              'Error logging out: ${e.toString()}',
+              MaterialPageRoute(builder: (_) => const SplashScreen()),
+              (Route<dynamic> route) => false,
             );
           }
-        });
-      }
+        } catch (e) {
+          // Handle any errors
+          if (context.mounted) {
+            // Close loading dialog if it's showing
+            Navigator.pop(context);
+
+            // Show error message
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                FirebaseSnackbar.error(
+                  context,
+                  'Error logging out: ${e.toString()}',
+                );
+              }
+            });
+          }
+        }
+      },
+    );
+
+    if (shouldLogout == true) {
+      // The logout is handled in onConfirm callback
+      // No additional code needed here
     }
   }
 
@@ -1129,9 +1193,11 @@ class _ProfilePageState extends State<ProfilePage>
                             // Profile Image
                             Center(
                               child: Stack(
+                                alignment: Alignment.center,
                                 children: [
                                   CircleAvatar(
-                                    radius: 60.0,
+                                    radius:
+                                        getResponsiveAvatarSize(width) * 0.75,
                                     backgroundColor: Colors.deepPurple.shade100,
                                     backgroundImage: _user?.photoURL != null
                                         ? NetworkImage(_user!.photoURL!)
@@ -1144,43 +1210,66 @@ class _ProfilePageState extends State<ProfilePage>
                                                 : (_user?.email?[0]
                                                           .toUpperCase() ??
                                                       "U"),
-                                            style: const TextStyle(
-                                              fontSize: 40.0,
+                                            style: TextStyle(
+                                              fontSize:
+                                                  getResponsiveAvatarSize(
+                                                    width,
+                                                  ) *
+                                                  0.38,
+                                              fontWeight: FontWeight.bold,
                                               color: Colors.deepPurple,
                                             ),
                                           )
                                         : null,
                                   ),
                                   Positioned(
-                                    bottom: 0.0,
-                                    right: 0.0,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                        _pickImage();
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.all(10.0),
-                                        decoration: BoxDecoration(
-                                          color: Colors.deepPurple,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: Colors.white,
-                                            width: 3.0,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(
-                                                0.2,
-                                              ),
-                                              blurRadius: 8.0,
-                                            ),
-                                          ],
-                                        ),
-                                        child: const Icon(
-                                          Icons.camera_alt,
+                                    bottom: 1,
+                                    right: 0,
+                                    child: Container(
+                                      width:
+                                          getResponsiveAvatarSize(width) * 0.55,
+                                      height:
+                                          getResponsiveAvatarSize(width) * 0.55,
+                                      decoration: BoxDecoration(
+                                        color: Colors.deepPurple,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
                                           color: Colors.white,
-                                          size: 22.0,
+                                          width:
+                                              getResponsiveBorderRadius(width) *
+                                              0.12,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.3,
+                                            ),
+                                            blurRadius:
+                                                getResponsiveBorderRadius(
+                                                  width,
+                                                ) *
+                                                0.22,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          customBorder: const CircleBorder(),
+                                          onTap: () {
+                                            Navigator.pop(context);
+                                            _pickImage();
+                                          },
+                                          child: Center(
+                                            child: Icon(
+                                              Icons.camera_alt,
+                                              color: Colors.white,
+                                              size:
+                                                  getResponsiveIconSize(width) *
+                                                  0.75,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -1189,7 +1278,9 @@ class _ProfilePageState extends State<ProfilePage>
                               ),
                             ),
 
-                            const SizedBox(height: 30.0),
+                            SizedBox(
+                              height: getResponsiveVerticalSpacing(width),
+                            ),
 
                             // Name field
                             _buildEditableField(
@@ -1208,13 +1299,15 @@ class _ProfilePageState extends State<ProfilePage>
                               },
                             ),
 
-                            const SizedBox(height: 16.0),
+                            SizedBox(height: getResponsiveCardSpacing(width)),
 
                             // Phone field with +91 prefix in UI only
                             Container(
                               decoration: BoxDecoration(
                                 color: Colors.grey.shade50,
-                                borderRadius: BorderRadius.circular(12.0),
+                                borderRadius: BorderRadius.circular(
+                                  getResponsiveBorderRadius(width) * 0.6,
+                                ),
                                 border: Border.all(color: Colors.grey.shade200),
                               ),
                               child: Row(
@@ -1241,7 +1334,9 @@ class _ProfilePageState extends State<ProfilePage>
                                         Icon(
                                           Icons.phone_outlined,
                                           color: Colors.deepPurple.shade300,
-                                          size: 20.0,
+                                          size:
+                                              getResponsiveIconSize(width) *
+                                              0.9,
                                         ),
                                         const SizedBox(width: 4.0),
                                         const Text(
@@ -1306,7 +1401,7 @@ class _ProfilePageState extends State<ProfilePage>
                               ),
                             ),
 
-                            const SizedBox(height: 16.0),
+                            SizedBox(height: getResponsiveCardSpacing(width)),
 
                             // Email field
                             _buildEditableField(
@@ -1341,7 +1436,7 @@ class _ProfilePageState extends State<ProfilePage>
                               },
                             ),
 
-                            const SizedBox(height: 16.0),
+                            SizedBox(height: getResponsiveCardSpacing(width)),
 
                             // Bio field
                             _buildEditableField(
@@ -1358,12 +1453,14 @@ class _ProfilePageState extends State<ProfilePage>
                               },
                             ),
 
-                            const SizedBox(height: 30.0),
+                            SizedBox(
+                              height: getResponsiveVerticalSpacing(width),
+                            ),
 
                             // Save button
                             SizedBox(
                               width: double.infinity,
-                              height: 50.0,
+                              height: getResponsiveAvatarSize(width) * 1.2,
                               child: ElevatedButton(
                                 onPressed: isLoading
                                     ? null
@@ -1444,7 +1541,9 @@ class _ProfilePageState extends State<ProfilePage>
                                   backgroundColor: Colors.deepPurple,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12.0),
+                                    borderRadius: BorderRadius.circular(
+                                      getResponsiveBorderRadius(width) * 0.6,
+                                    ),
                                   ),
                                   elevation: 2.0,
                                 ),
@@ -1493,13 +1592,15 @@ class _ProfilePageState extends State<ProfilePage>
     bool enabled = true,
     String? Function(String?)? validator,
   }) {
-    final double fontSize = isMobile ? 14.0 : 16.0;
-    final double iconSize = isMobile ? 20.0 : 22.0;
+    final width = MediaQuery.of(context).size.width;
+    final double fontSize = getResponsiveFontSize(width);
+    final double iconSize = getResponsiveIconSize(width);
+    final double borderRadius = getResponsiveBorderRadius(width) * 0.6;
 
     return Container(
       decoration: BoxDecoration(
         color: enabled ? Colors.grey.shade50 : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
           color: enabled ? Colors.grey.shade200 : Colors.grey.shade300,
         ),
@@ -1638,8 +1739,11 @@ class _ProfilePageState extends State<ProfilePage>
     bool isDisabled = false,
     required bool isMobile,
   }) {
-    final double fontSize = isMobile ? 15.0 : 16.0;
-    final double iconSize = isMobile ? 20.0 : 22.0;
+    final width = MediaQuery.of(context).size.width;
+    final double fontSize = getResponsiveFontSize(width);
+    final double iconSize = getResponsiveIconSize(width);
+    final double borderRadius = getResponsiveBorderRadius(width);
+    final double cardSpacing = getResponsiveCardSpacing(width);
 
     return TweenAnimationBuilder(
       tween: Tween<double>(begin: 0.9, end: 1.0),
@@ -1651,12 +1755,12 @@ class _ProfilePageState extends State<ProfilePage>
           child: Opacity(
             opacity: isDisabled ? 0.5 : 1.0,
             child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 6.0),
+              margin: EdgeInsets.symmetric(vertical: cardSpacing * 0.6),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: isDisabled ? null : onTap,
-                  borderRadius: BorderRadius.circular(16.0),
+                  borderRadius: BorderRadius.circular(borderRadius),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16.0,
@@ -1664,7 +1768,7 @@ class _ProfilePageState extends State<ProfilePage>
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(16.0),
+                      borderRadius: BorderRadius.circular(borderRadius),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.02),
@@ -1681,7 +1785,9 @@ class _ProfilePageState extends State<ProfilePage>
                             color: (iconColor ?? Colors.deepPurple).withOpacity(
                               0.1,
                             ),
-                            borderRadius: BorderRadius.circular(12.0),
+                            borderRadius: BorderRadius.circular(
+                              borderRadius * 0.6,
+                            ),
                           ),
                           child: Icon(
                             icon,
@@ -1729,14 +1835,25 @@ class _ProfilePageState extends State<ProfilePage>
 
     final bool isMobileDevice = isMobile(width);
     final bool isTabletDevice = isTablet(width);
+    final bool isSmallDesktopDevice = isSmallDesktop(width);
     final bool isDesktopDevice = isDesktop(width);
     final bool isLargeDesktopDevice = isLargeDesktop(width);
+    final bool isUltraWideDevice = isUltraWide(width);
 
     final double horizontalPadding = getResponsiveHorizontalPadding(width);
+    final double verticalSpacing = getResponsiveVerticalSpacing(width);
     final double bodyFontSize = getResponsiveFontSize(width);
-    final double headingFontSize = isLargeDesktopDevice
-        ? 24.0
-        : (isDesktopDevice ? 22.0 : (isTabletDevice ? 20.0 : 18.0));
+    final double headingFontSize = getResponsiveFontSize(
+      width,
+      mobile: 18.0,
+      tablet: 20.0,
+      smallDesktop: 22.0,
+      desktop: 24.0,
+      largeDesktop: 28.0,
+      ultraWide: 32.0,
+    );
+    final double borderRadius = getResponsiveBorderRadius(width);
+    final double cardSpacing = getResponsiveCardSpacing(width);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -1749,43 +1866,52 @@ class _ProfilePageState extends State<ProfilePage>
                 physics: const BouncingScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(
                   horizontalPadding,
-                  20.0,
+                  verticalSpacing,
                   horizontalPadding,
-                  30.0,
+                  verticalSpacing * 1.5,
                 ),
                 child: FadeTransition(
                   opacity: _fadeAnimation,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      maxWidth: isLargeDesktopDevice
-                          ? 800.0
-                          : (isDesktopDevice
-                                ? 700.0
-                                : (isTabletDevice ? 600.0 : double.infinity)),
+                      maxWidth: isUltraWideDevice
+                          ? 1200.0
+                          : (isLargeDesktopDevice
+                                ? 1000.0
+                                : (isDesktopDevice
+                                      ? 900.0
+                                      : (isSmallDesktopDevice
+                                            ? 800.0
+                                            : (isTabletDevice
+                                                  ? 700.0
+                                                  : double.infinity)))),
                     ),
                     child: Column(
                       children: [
                         _buildProfileHeader(
                           isMobile: isMobileDevice,
                           isTablet: isTabletDevice,
-                          isDesktop: isDesktopDevice || isLargeDesktopDevice,
+                          isDesktop:
+                              isDesktopDevice ||
+                              isLargeDesktopDevice ||
+                              isUltraWideDevice,
                           bodyFontSize: bodyFontSize,
                           headingFontSize: headingFontSize,
                         ),
-                        const SizedBox(height: 24.0),
+                        SizedBox(height: verticalSpacing),
 
                         if (_bioController.text.isNotEmpty)
                           _buildBioSection(
                             isMobile: isMobileDevice,
                             bodyFontSize: bodyFontSize,
                           ),
-                        const SizedBox(height: 24.0),
+                        SizedBox(height: verticalSpacing),
 
                         _buildStatsCards(
                           isMobile: isMobileDevice,
                           bodyFontSize: bodyFontSize,
                         ),
-                        const SizedBox(height: 24.0),
+                        SizedBox(height: verticalSpacing),
 
                         _buildSectionHeader(
                           "Account",
@@ -1835,7 +1961,7 @@ class _ProfilePageState extends State<ProfilePage>
                           isMobile: isMobileDevice,
                         ),
 
-                        const SizedBox(height: 16.0),
+                        SizedBox(height: cardSpacing),
 
                         if (_isOwner || !_hasPendingApplication) ...[
                           _buildSectionHeader(
@@ -1866,7 +1992,9 @@ class _ProfilePageState extends State<ProfilePage>
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.deepPurple.shade50,
-                                  borderRadius: BorderRadius.circular(20.0),
+                                  borderRadius: BorderRadius.circular(
+                                    borderRadius * 0.8,
+                                  ),
                                 ),
                                 child: Text(
                                   "Start Selling",
@@ -1896,10 +2024,12 @@ class _ProfilePageState extends State<ProfilePage>
                                 Navigator.pushNamed(context, '/owner-home');
                               },
                               trailing: Container(
-                                padding: const EdgeInsets.all(8.0),
+                                padding: const EdgeInsets.all(6.0),
                                 decoration: BoxDecoration(
                                   color: Colors.teal.shade50,
-                                  borderRadius: BorderRadius.circular(12.0),
+                                  borderRadius: BorderRadius.circular(
+                                    borderRadius * 0.6,
+                                  ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -1914,7 +2044,7 @@ class _ProfilePageState extends State<ProfilePage>
                                       "Active",
                                       style: TextStyle(
                                         color: Colors.teal,
-                                        fontSize: bodyFontSize * 0.8,
+                                        fontSize: bodyFontSize * 0.75,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -1925,7 +2055,7 @@ class _ProfilePageState extends State<ProfilePage>
                             ),
                         ],
 
-                        const SizedBox(height: 16.0),
+                        SizedBox(height: cardSpacing),
 
                         _buildSectionHeader(
                           "Settings",
@@ -1960,14 +2090,14 @@ class _ProfilePageState extends State<ProfilePage>
                           isMobile: isMobileDevice,
                         ),
 
-                        const SizedBox(height: 30.0),
+                        SizedBox(height: verticalSpacing * 1.5),
 
                         _buildLogoutButton(
                           isMobile: isMobileDevice,
                           bodyFontSize: bodyFontSize,
                         ),
 
-                        const SizedBox(height: 20.0),
+                        SizedBox(height: verticalSpacing),
 
                         Column(
                           children: [
@@ -2003,8 +2133,12 @@ class _ProfilePageState extends State<ProfilePage>
     required double bodyFontSize,
     required double headingFontSize,
   }) {
-    final double avatarRadius = isMobile ? 40.0 : (isTablet ? 44.0 : 48.0);
-    final double iconSize = isMobile ? 20.0 : 22.0;
+    final width = MediaQuery.of(context).size.width;
+    final double avatarRadius = getResponsiveAvatarSize(width);
+    final double iconSize = getResponsiveIconSize(width);
+    final double borderRadius = getResponsiveBorderRadius(width);
+    final double horizontalPadding = getResponsiveHorizontalPadding(width);
+    final double verticalSpacing = getResponsiveVerticalSpacing(width);
 
     return Container(
       width: double.infinity,
@@ -2014,7 +2148,7 @@ class _ProfilePageState extends State<ProfilePage>
           end: Alignment.bottomRight,
           colors: [Colors.deepPurple.shade400, Colors.deepPurple.shade700],
         ),
-        borderRadius: BorderRadius.circular(24.0),
+        borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
             color: Colors.deepPurple.withOpacity(0.3),
@@ -2029,7 +2163,7 @@ class _ProfilePageState extends State<ProfilePage>
             top: -20.0,
             right: -20.0,
             child: Container(
-              width: 120.0,
+              width: 100.0,
               height: 120.0,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
@@ -2049,9 +2183,8 @@ class _ProfilePageState extends State<ProfilePage>
               ),
             ),
           ),
-
           Padding(
-            padding: EdgeInsets.all(isMobile ? 20.0 : 24.0),
+            padding: EdgeInsets.all(isMobile ? 13.0 : 17.0),
             child: Row(
               children: [
                 // Profile Image
@@ -2060,7 +2193,7 @@ class _ProfilePageState extends State<ProfilePage>
                   child: Stack(
                     children: [
                       CircleAvatar(
-                        radius: avatarRadius,
+                        radius: avatarRadius * 0.5,
                         backgroundColor: Colors.white,
                         backgroundImage: _user?.photoURL != null
                             ? NetworkImage(_user!.photoURL!)
@@ -2071,7 +2204,7 @@ class _ProfilePageState extends State<ProfilePage>
                                     ? _nameController.text[0].toUpperCase()
                                     : (_user?.email?[0].toUpperCase() ?? "U"),
                                 style: TextStyle(
-                                  fontSize: avatarRadius * 0.8,
+                                  fontSize: avatarRadius * 0.4,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.deepPurple,
                                 ),
@@ -2102,7 +2235,7 @@ class _ProfilePageState extends State<ProfilePage>
                     ],
                   ),
                 ),
-                const SizedBox(width: 20.0),
+                const SizedBox(width: 12.0),
 
                 // User Info
                 Expanded(
@@ -2115,7 +2248,7 @@ class _ProfilePageState extends State<ProfilePage>
                             : (_user?.displayName ?? "User"),
                         style: GoogleFonts.poppins(
                           color: Colors.white,
-                          fontSize: headingFontSize,
+                          fontSize: headingFontSize * 0.75,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -2127,7 +2260,7 @@ class _ProfilePageState extends State<ProfilePage>
                           children: [
                             Icon(
                               Icons.phone_outlined,
-                              size: 14.0,
+                              size: bodyFontSize * 0.75,
                               color: Colors.white.withOpacity(0.7),
                             ),
                             const SizedBox(width: 4.0),
@@ -2135,7 +2268,7 @@ class _ProfilePageState extends State<ProfilePage>
                               _phoneController.text,
                               style: GoogleFonts.inter(
                                 color: Colors.white.withOpacity(0.9),
-                                fontSize: bodyFontSize * 0.85,
+                                fontSize: bodyFontSize * 0.65,
                               ),
                             ),
                           ],
@@ -2147,7 +2280,7 @@ class _ProfilePageState extends State<ProfilePage>
                           children: [
                             Icon(
                               Icons.email_outlined,
-                              size: 14.0,
+                              size: bodyFontSize * 0.75,
                               color: Colors.white.withOpacity(0.7),
                             ),
                             const SizedBox(width: 4.0),
@@ -2156,7 +2289,7 @@ class _ProfilePageState extends State<ProfilePage>
                                 _user!.email!,
                                 style: GoogleFonts.inter(
                                   color: Colors.white.withOpacity(0.9),
-                                  fontSize: bodyFontSize * 0.85,
+                                  fontSize: bodyFontSize * 0.65,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -2166,9 +2299,9 @@ class _ProfilePageState extends State<ProfilePage>
 
                       const SizedBox(height: 8.0),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12.0,
-                          vertical: 4.0,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding * 0.4,
+                          vertical: verticalSpacing * 0.18,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
@@ -2179,7 +2312,7 @@ class _ProfilePageState extends State<ProfilePage>
                           children: [
                             Icon(
                               _isOwner ? Icons.verified : Icons.person,
-                              size: 14.0,
+                              size: bodyFontSize * 0.75,
                               color: Colors.white,
                             ),
                             const SizedBox(width: 4.0),
@@ -2187,7 +2320,7 @@ class _ProfilePageState extends State<ProfilePage>
                               _isOwner ? "Seller Account" : "Customer Account",
                               style: GoogleFonts.inter(
                                 color: Colors.white,
-                                fontSize: bodyFontSize * 0.8,
+                                fontSize: bodyFontSize * 0.65,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -2200,18 +2333,36 @@ class _ProfilePageState extends State<ProfilePage>
 
                 // Edit Button
                 Container(
+                  width: getResponsiveAvatarSize(width) * 0.75,
+                  height: getResponsiveAvatarSize(width) * 0.75,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withOpacity(0.25),
                     shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    onPressed: _showEditProfileDialog,
-                    icon: Icon(
-                      _isUploading ? Icons.hourglass_empty : Icons.edit,
+                    border: Border.all(
                       color: Colors.white,
-                      size: iconSize,
+                      width: borderRadius * 0.08,
                     ),
-                    tooltip: 'Edit Profile',
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: borderRadius * 0.15,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: _showEditProfileDialog,
+                      child: Center(
+                        child: Icon(
+                          _isUploading ? Icons.hourglass_empty : Icons.edit,
+                          color: Colors.white,
+                          size: iconSize * 0.75,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -2226,11 +2377,14 @@ class _ProfilePageState extends State<ProfilePage>
     required bool isMobile,
     required double bodyFontSize,
   }) {
+    final width = MediaQuery.of(context).size.width;
+    final double borderRadius = getResponsiveBorderRadius(width);
+
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
@@ -2245,7 +2399,7 @@ class _ProfilePageState extends State<ProfilePage>
             padding: const EdgeInsets.all(8.0),
             decoration: BoxDecoration(
               color: Colors.deepPurple.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12.0),
+              borderRadius: BorderRadius.circular(borderRadius * 0.6),
             ),
             child: const Icon(Icons.info, color: Colors.deepPurple, size: 20.0),
           ),
@@ -2278,8 +2432,22 @@ class _ProfilePageState extends State<ProfilePage>
     required bool isMobile,
     required double bodyFontSize,
   }) {
-    final double statFontSize = isMobile ? 18.0 : 20.0;
-    final double labelFontSize = isMobile ? 11.0 : 12.0;
+    final width = MediaQuery.of(context).size.width;
+    final double statFontSize = getResponsiveFontSize(
+      width,
+      mobile: 18.0,
+      tablet: 20.0,
+      smallDesktop: 22.0,
+      desktop: 24.0,
+    );
+    final double labelFontSize = getResponsiveFontSize(
+      width,
+      mobile: 11.0,
+      tablet: 12.0,
+      smallDesktop: 13.0,
+      desktop: 14.0,
+    );
+    final double cardSpacing = getResponsiveCardSpacing(width);
 
     return Row(
       children: [
@@ -2292,7 +2460,7 @@ class _ProfilePageState extends State<ProfilePage>
           statFontSize: statFontSize,
           labelFontSize: labelFontSize,
         ),
-        const SizedBox(width: 12.0),
+        SizedBox(width: cardSpacing),
         _buildStatCard(
           "Wishlist",
           "12",
@@ -2302,7 +2470,7 @@ class _ProfilePageState extends State<ProfilePage>
           statFontSize: statFontSize,
           labelFontSize: labelFontSize,
         ),
-        const SizedBox(width: 12.0),
+        SizedBox(width: cardSpacing),
         _buildStatCard(
           "Coupons",
           "5",
@@ -2325,15 +2493,17 @@ class _ProfilePageState extends State<ProfilePage>
     required double statFontSize,
     required double labelFontSize,
   }) {
-    final double iconSize = isMobile ? 20.0 : 22.0;
-    final double padding = isMobile ? 12.0 : 16.0;
+    final width = MediaQuery.of(context).size.width;
+    final double iconSize = getResponsiveIconSize(width);
+    final double padding = getResponsiveCardSpacing(width);
+    final double borderRadius = getResponsiveBorderRadius(width);
 
     return Expanded(
       child: Container(
         padding: EdgeInsets.all(padding),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16.0),
+          borderRadius: BorderRadius.circular(borderRadius),
           boxShadow: [
             BoxShadow(
               color: color.withOpacity(0.1),
@@ -2379,11 +2549,14 @@ class _ProfilePageState extends State<ProfilePage>
     IconData icon, {
     required double headingFontSize,
   }) {
+    final width = MediaQuery.of(context).size.width;
+    final double iconSize = getResponsiveIconSize(width);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0, left: 8.0),
       child: Row(
         children: [
-          Icon(icon, size: 20.0, color: Colors.deepPurple.shade300),
+          Icon(icon, size: iconSize * 0.9, color: Colors.deepPurple.shade300),
           const SizedBox(width: 8.0),
           Text(
             title,
@@ -2399,18 +2572,22 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   Widget _buildBadge(int count, {required bool isMobile}) {
+    final width = MediaQuery.of(context).size.width;
+    final double borderRadius = getResponsiveBorderRadius(width);
+    final double fontSize = getResponsiveFontSize(width) * 0.8;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       decoration: BoxDecoration(
         color: Colors.red.shade50,
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: BorderRadius.circular(borderRadius * 0.6),
         border: Border.all(color: Colors.red.shade200),
       ),
       child: Text(
         count.toString(),
         style: TextStyle(
           color: Colors.red.shade700,
-          fontSize: isMobile ? 11.0 : 12.0,
+          fontSize: fontSize,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -2421,11 +2598,15 @@ class _ProfilePageState extends State<ProfilePage>
     required bool isMobile,
     required double bodyFontSize,
   }) {
+    final width = MediaQuery.of(context).size.width;
+    final double borderRadius = getResponsiveBorderRadius(width);
+    final double fontSize = getResponsiveFontSize(width) * 0.9;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
       decoration: BoxDecoration(
         color: Colors.green.shade50,
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: BorderRadius.circular(borderRadius * 0.6),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -2435,7 +2616,7 @@ class _ProfilePageState extends State<ProfilePage>
             "1,250",
             style: TextStyle(
               color: Colors.green.shade700,
-              fontSize: isMobile ? 12.0 : 13.0,
+              fontSize: fontSize,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -2448,6 +2629,10 @@ class _ProfilePageState extends State<ProfilePage>
     required bool isMobile,
     required double bodyFontSize,
   }) {
+    final width = MediaQuery.of(context).size.width;
+    final double borderRadius = getResponsiveBorderRadius(width);
+    final double fontSize = getResponsiveFontSize(width) * 0.8;
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       padding: const EdgeInsets.all(16.0),
@@ -2455,7 +2640,7 @@ class _ProfilePageState extends State<ProfilePage>
         gradient: LinearGradient(
           colors: [Colors.orange.shade50, Colors.amber.shade50],
         ),
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(color: Colors.orange.shade200),
       ),
       child: Row(
@@ -2506,7 +2691,7 @@ class _ProfilePageState extends State<ProfilePage>
               style: TextStyle(
                 color: Colors.orange,
                 fontWeight: FontWeight.w600,
-                fontSize: isMobile ? 11.0 : 12.0,
+                fontSize: fontSize,
               ),
             ),
           ),
@@ -2519,16 +2704,20 @@ class _ProfilePageState extends State<ProfilePage>
     required bool isMobile,
     required double bodyFontSize,
   }) {
+    final width = MediaQuery.of(context).size.width;
+    final double borderRadius = getResponsiveBorderRadius(width);
+    final double height = getResponsiveAvatarSize(width) * 1.2;
+
     return SizedBox(
       width: double.infinity,
-      height: isMobile ? 52.0 : 56.0,
+      height: height,
       child: ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red.shade50,
           foregroundColor: Colors.red,
           elevation: 0.0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
+            borderRadius: BorderRadius.circular(borderRadius),
             side: BorderSide(color: Colors.red.shade200),
           ),
         ),

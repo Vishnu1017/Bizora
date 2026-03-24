@@ -8,6 +8,7 @@ import 'package:bizora/Admin/screens/admin_settings_page.dart';
 import 'package:bizora/Admin/screens/admin_shops_page.dart';
 import 'package:bizora/Admin/screens/admin_users_page.dart';
 import 'package:bizora/core/utils/firebase_snackbar.dart';
+import 'package:bizora/core/utils/profile_image_notifier.dart';
 import 'package:bizora/features/auth/screens/waiting_screen.dart';
 import 'package:bizora/features/customer/screens/customer_home.dart';
 import 'package:bizora/features/customer/screens/orders_page.dart';
@@ -303,7 +304,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
               _hasAppliedForOwner = false;
               _applicationStatus = '';
               _userName = data['name'] ?? user.displayName ?? 'Admin';
-              _userPhotoUrl = data['photoUrl'] ?? user.photoURL ?? '';
+              _userPhotoUrl = data['photoURL'] ?? user.photoURL ?? '';
               _isOwnerMode = false;
               _initializeNavigation();
               _isLoading = false;
@@ -1204,7 +1205,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                 GestureDetector(
                                   onTap: () {
                                     setState(() {
-                                      _currentIndex = 4; // Profile page index
+                                      _currentIndex = 4;
                                     });
 
                                     _fadeController.reset();
@@ -1220,31 +1221,46 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                       shape: BoxShape.circle,
                                       gradient: gradient,
                                     ),
-                                    child: CircleAvatar(
-                                      radius: avatarSize / 2,
-                                      backgroundColor: Colors.transparent,
-                                      child: _userPhotoUrl.isNotEmpty
-                                          ? ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    avatarSize / 2,
+                                    child: ValueListenableBuilder<String?>(
+                                      valueListenable: profileImageNotifier,
+                                      builder: (context, value, child) {
+                                        final imageUrl = value ?? _userPhotoUrl;
+
+                                        return CircleAvatar(
+                                          radius: avatarSize / 2,
+                                          backgroundColor: Colors.transparent,
+                                          child:
+                                              imageUrl.isNotEmpty
+                                              ? ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                        avatarSize / 2,
+                                                      ),
+                                                  child: AnimatedSwitcher(
+                                                    duration: const Duration(
+                                                      milliseconds: 300,
+                                                    ),
+                                                    child: Image.network(
+                                                      imageUrl,
+                                                      key: ValueKey(imageUrl),
+                                                      fit: BoxFit.cover,
+                                                      width: avatarSize,
+                                                      height: avatarSize,
+                                                    ),
                                                   ),
-                                              child: Image.network(
-                                                _userPhotoUrl,
-                                                fit: BoxFit.cover,
-                                                width: avatarSize,
-                                                height: avatarSize,
-                                              ),
-                                            )
-                                          : Icon(
-                                              _isOwnerMode
-                                                  ? Icons.store
-                                                  : _userRole == 'admin'
-                                                  ? Icons.admin_panel_settings
-                                                  : Icons.person,
-                                              color: Colors.white,
-                                              size: avatarSize * 0.5,
-                                            ),
+                                                )
+                                              : Icon(
+                                                  _isOwnerMode
+                                                      ? Icons.store
+                                                      : _userRole == 'admin'
+                                                      ? Icons
+                                                            .admin_panel_settings
+                                                      : Icons.person,
+                                                  color: Colors.white,
+                                                  size: avatarSize * 0.5,
+                                                ),
+                                        );
+                                      },
                                     ),
                                   ),
                                 ),

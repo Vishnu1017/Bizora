@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:bizora/core/utils/firebase_snackbar.dart';
+import 'package:bizora/core/utils/profile_image_notifier.dart';
 import 'package:bizora/features/auth/screens/splash_screen.dart';
 import 'package:bizora/features/customer/screens/become_seller_info.dart';
 import 'package:bizora/services/security_service.dart';
-import 'package:bizora/services/upload_service.dart';
 import 'package:bizora/widgets/logout_confirmation_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,8 +17,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
+
+enum ImageAction { gallery, camera, remove }
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -653,125 +654,58 @@ class _ProfilePageState extends State<ProfilePage>
   Future<void> _pickImage() async {
     if (_isUploading) return;
 
-    // Rate limiting
-    if (!_securityService.checkRateLimit(_user!.uid, 'upload_image')) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          FirebaseSnackbar.error(
-            context,
-            'Too many upload attempts. Please try later.',
-          );
-        }
-      });
-      return;
-    }
-
     try {
-      // Show options dialog
-      final source = await showDialog<ImageSource>(
+      final action = await showDialog<ImageAction>(
         context: context,
-        builder: (BuildContext context) {
-          final width = MediaQuery.of(context).size.width;
-
+        builder: (context) {
           return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(
-                getResponsiveBorderRadius(width),
-              ),
-            ),
-            title: const Text(
-              'Profile Picture',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            title: const Text('Profile Picture'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8.0),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.photo_library, color: Colors.blue),
-                  ),
-                  title: const Text('Choose from Gallery'),
-                  onTap: () => Navigator.pop(context, ImageSource.gallery),
+                  leading: const Icon(Icons.photo),
+                  title: const Text('Gallery'),
+                  onTap: () => Navigator.pop(context, ImageAction.gallery),
                 ),
-                const Divider(height: 1.0),
                 ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8.0),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade50,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.camera_alt, color: Colors.green),
-                  ),
-                  title: const Text('Take a Photo'),
-                  onTap: () => Navigator.pop(context, ImageSource.camera),
+                  leading: const Icon(Icons.camera),
+                  title: const Text('Camera'),
+                  onTap: () => Navigator.pop(context, ImageAction.camera),
                 ),
-                if (_user?.photoURL != null) ...[
-                  const Divider(height: 1.0),
+                if (_user?.photoURL != null)
                   ListTile(
-                    leading: Container(
-                      padding: const EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.delete_outline,
-                        color: Colors.red,
-                      ),
-                    ),
-                    title: const Text('Remove Current Photo'),
-                    onTap: () => Navigator.pop(context, null),
+                    leading: const Icon(Icons.delete, color: Colors.red),
+                    title: const Text('Remove Photo'),
+                    onTap: () => Navigator.pop(context, ImageAction.remove),
                   ),
-                ],
               ],
             ),
           );
         },
       );
 
-      if (source == null) {
+      if (action == null) return;
+
+      if (action == ImageAction.remove) {
         _removeProfilePicture();
         return;
       }
 
-      // Check permissions for Android
-      if (Platform.isAndroid) {
-        bool hasPermission = await _checkAndroidPermission(source);
-        if (!hasPermission) {
-          _showPermissionDeniedDialog();
-          return;
-        }
-      }
+      final source = action == ImageAction.camera
+          ? ImageSource.camera
+          : ImageSource.gallery;
 
-      setState(() => _isUploading = true);
+      await Future.delayed(const Duration(milliseconds: 200));
 
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: source,
-        maxWidth: 512,
-        maxHeight: 512,
-        imageQuality: 80,
-      );
+      final picker = ImagePicker();
+      final image = await picker.pickImage(source: source, imageQuality: 80);
 
       if (image != null) {
         await _uploadImageToFirebase(File(image.path));
-      } else {
-        setState(() => _isUploading = false);
       }
     } catch (e) {
-      print('Error picking image: $e');
-      setState(() => _isUploading = false);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          FirebaseSnackbar.error(context, 'Security error: Image pick failed');
-        }
-      });
+      print("Image pick error: $e");
     }
   }
 
@@ -779,59 +713,61 @@ class _ProfilePageState extends State<ProfilePage>
     try {
       setState(() => _isUploading = true);
 
-      final task = await UploadService.uploadCompressedImage(
-        imageFile: imageFile,
-        uid: _user!.uid,
+      final uid = _user!.uid;
+
+      // 🔥 COMPRESS IMAGE (FAST)
+      final compressedBytes = await FlutterImageCompress.compressWithFile(
+        imageFile.absolute.path,
+        quality: 50,
+        minWidth: 720,
+        minHeight: 720,
+        format: CompressFormat.jpeg,
       );
 
-      final snapshot = await task;
+      // 🔥 STORAGE PATH
+      final ref = FirebaseStorage.instance.ref().child(
+        'profile_images/$uid/profile.jpg',
+      );
+
+      // 🔥 FAST UPLOAD
+      final uploadTask = ref.putData(
+        compressedBytes!,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+
+      final snapshot = await uploadTask;
       final downloadUrl = await snapshot.ref.getDownloadURL();
 
-      // Update Firebase Auth
+      // 🔥 UPDATE AUTH
       await _user?.updatePhotoURL(downloadUrl);
-
-      // Update Firestore with security metadata
-      await FirebaseFirestore.instance
-          .collection("users")
-          .doc(_user!.uid)
-          .update({
-            "photoURL": downloadUrl,
-            "photoUpdatedAt": FieldValue.serverTimestamp(),
-            "photoUpdateDevice": await _getDeviceInfo(),
-            "photoUpdateSession": _sessionToken,
-            "updatedAt": FieldValue.serverTimestamp(),
-          });
-
       await _user?.reload();
       _user = FirebaseAuth.instance.currentUser;
 
+      // 🔥 UPDATE FIRESTORE
+      await FirebaseFirestore.instance.collection("users").doc(uid).update({
+        "photoURL": downloadUrl,
+        "updatedAt": FieldValue.serverTimestamp(),
+      });
+
+      // 🚀🔥 INSTANT UI UPDATE (KEY PART)
+      profileImageNotifier.value = downloadUrl;
+
       if (mounted) {
-        setState(() {
-          _isUploading = false;
-        });
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            FirebaseSnackbar.success(
-              context,
-              "Profile picture updated securely!",
-            );
-          }
-        });
+        setState(() => _isUploading = false);
+
+        FirebaseSnackbar.success(
+          context,
+          "Profile picture updated successfully!",
+        );
+
         await _loadUserData();
       }
     } catch (e) {
       print("Upload error: $e");
-      await _securityService.logSuspiciousActivity(
-        _user!.uid,
-        'Failed image upload: $e',
-      );
+
       if (mounted) {
         setState(() => _isUploading = false);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            FirebaseSnackbar.error(context, "Security error: Upload failed");
-          }
-        });
+        FirebaseSnackbar.error(context, "Upload failed");
       }
     }
   }
@@ -878,10 +814,9 @@ class _ProfilePageState extends State<ProfilePage>
 
                   // Delete from Storage if exists
                   try {
-                    final storageRef = FirebaseStorage.instance
-                        .ref()
-                        .child('profile_pictures')
-                        .child(_user!.uid);
+                    final storageRef = FirebaseStorage.instance.ref().child(
+                      'profile_images/${_user!.uid}',
+                    );
                     await storageRef.listAll().then((result) {
                       for (var item in result.items) {
                         item.delete();
@@ -918,85 +853,6 @@ class _ProfilePageState extends State<ProfilePage>
                 foregroundColor: Colors.white,
               ),
               child: const Text('Remove'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<bool> _checkAndroidPermission(ImageSource source) async {
-    if (source == ImageSource.camera) {
-      var status = await Permission.camera.status;
-      if (!status.isGranted) {
-        status = await Permission.camera.request();
-      }
-      return status.isGranted;
-    } else {
-      // For gallery on Android
-      if (await Permission.photos.isGranted) {
-        return true;
-      }
-      if (await Permission.storage.isGranted) {
-        return true;
-      }
-
-      var photosStatus = await Permission.photos.request();
-      if (photosStatus.isGranted) {
-        return true;
-      }
-
-      var storageStatus = await Permission.storage.request();
-      return storageStatus.isGranted;
-    }
-  }
-
-  void _showPermissionDeniedDialog() {
-    final width = MediaQuery.of(context).size.width;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              getResponsiveBorderRadius(width),
-            ),
-          ),
-          title: const Icon(
-            Icons.warning_amber,
-            color: Colors.orange,
-            size: 40.0,
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Permission Required',
-                style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10.0),
-              const Text(
-                'Please grant permission to access photos and camera to set your profile picture.',
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                openAppSettings();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Open Settings'),
             ),
           ],
         );
@@ -1711,20 +1567,16 @@ class _ProfilePageState extends State<ProfilePage>
     return null;
   }
 
-  Future<File> compressImage(File file) async {
-    final dir = await getTemporaryDirectory();
-    final targetPath =
-        "${dir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg";
-
-    final compressedFile = await FlutterImageCompress.compressAndGetFile(
+  Future<Uint8List> compressImageFast(File file) async {
+    final result = await FlutterImageCompress.compressWithFile(
       file.absolute.path,
-      targetPath,
-      quality: 70,
-      minWidth: 1080,
-      minHeight: 1080,
+      quality: 50, // 🔥 reduce more (big speed boost)
+      minWidth: 720, // 🔥 smaller size = faster upload
+      minHeight: 720,
+      format: CompressFormat.jpeg,
     );
 
-    return File(compressedFile!.path);
+    return result!;
   }
 
   double uploadProgress = 0;

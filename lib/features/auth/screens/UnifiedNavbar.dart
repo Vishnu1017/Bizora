@@ -973,25 +973,25 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
         ],
       ),
 
-      /// APPBAR
+      /// APPBAR - Fixed overflow issues
       appBar: hideAppBarForAdmin
           ? null
           : PreferredSize(
               preferredSize: Size.fromHeight(
-                _isAppBarExpanded ? (navbarHeight * 1.6) : (navbarHeight * 1.3),
+                _isAppBarExpanded ? (navbarHeight * 1.4) : (navbarHeight * 1.2),
               ),
               child: SafeArea(
                 bottom: false,
                 child: Container(
                   margin: EdgeInsets.fromLTRB(
                     horizontalPadding,
-                    getResponsiveSpacing(width),
+                    getResponsiveSpacing(width) * 0.5,
                     horizontalPadding,
-                    getResponsiveSpacing(width) * 0.7,
+                    getResponsiveSpacing(width) * 0.5,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(32),
+                    borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
                         color: currentColor.withOpacity(0.15),
@@ -1002,13 +1002,13 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                     ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(32),
+                    borderRadius: BorderRadius.circular(28),
                     child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                       child: Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: horizontalPadding,
-                          vertical: getResponsiveSpacing(width) * 0.75,
+                          vertical: getResponsiveSpacing(width) * 0.5,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.5),
@@ -1018,6 +1018,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                           ),
                         ),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             // Left Section
                             Expanded(
@@ -1026,8 +1027,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize
-                                      .min, // Add this to prevent overflow
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     if (_userRole == 'admin' ||
                                         _isOwnerMode) ...[
@@ -1035,57 +1035,38 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                       Container(
                                         padding: EdgeInsets.symmetric(
                                           horizontal:
-                                              getResponsiveSpacing(width) *
-                                              0.75,
+                                              getResponsiveSpacing(width) * 0.6,
                                           vertical:
-                                              getResponsiveSpacing(width) * 0.3,
+                                              getResponsiveSpacing(width) * 0.2,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: currentColor.withOpacity(
-                                            0.08,
-                                          ), // softer background
+                                          color: currentColor.withOpacity(0.08),
                                           borderRadius: BorderRadius.circular(
-                                            22,
+                                            18,
                                           ),
-
-                                          // subtle border (premium feel)
                                           border: Border.all(
                                             color: currentColor.withOpacity(
                                               0.15,
                                             ),
                                             width: 1,
                                           ),
-
-                                          // light shadow (very minimal)
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: currentColor.withOpacity(
-                                                0.08,
-                                              ),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            // 🔹 Icon
                                             Icon(
                                               _userRole == 'admin'
                                                   ? Icons
                                                         .admin_panel_settings_rounded
                                                   : Icons.store_rounded,
-                                              size: iconSize * 0.55,
+                                              size: iconSize * 0.5,
                                               color: currentColor,
                                             ),
-
                                             SizedBox(
                                               width:
                                                   getResponsiveSpacing(width) *
-                                                  0.25,
+                                                  0.2,
                                             ),
-                                            // 🔹 Text
                                             Flexible(
                                               child: Text(
                                                 _getTitlePrefix(),
@@ -1096,10 +1077,9 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                                       getResponsiveFontSize(
                                                         width,
                                                       ) *
-                                                      0.75,
+                                                      0.7,
                                                   color: currentColor,
                                                   fontWeight: FontWeight.w600,
-                                                  letterSpacing: 0.2,
                                                 ),
                                               ),
                                             ),
@@ -1108,15 +1088,15 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                       ),
                                       SizedBox(
                                         height:
-                                            getResponsiveSpacing(width) * 0.3,
-                                      ), // Reduced spacing
+                                            getResponsiveSpacing(width) * 0.2,
+                                      ),
                                       Flexible(
                                         child: Text(
                                           _getPageTitle(),
                                           style: TextStyle(
                                             fontSize:
                                                 getResponsiveFontSize(width) *
-                                                1.25, // Reduced from 1.8
+                                                1.1,
                                             fontWeight: FontWeight.bold,
                                             color: currentColor,
                                             letterSpacing: -0.5,
@@ -1130,14 +1110,14 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                       _getGreeting(),
                                       SizedBox(
                                         height:
-                                            getResponsiveSpacing(width) * 0.3,
+                                            getResponsiveSpacing(width) * 0.2,
                                       ),
                                       Text(
                                         _getPageTitle(),
                                         style: TextStyle(
                                           fontSize:
                                               getResponsiveFontSize(width) *
-                                              1.25,
+                                              1.1,
                                           fontWeight: FontWeight.bold,
                                           color: currentColor,
                                           letterSpacing: -0.5,
@@ -1153,8 +1133,9 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
 
                             // Right Section - Actions
                             Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                /// OWNER BUTTON - Show for customers who applied AND for owners
+                                /// OWNER BUTTON
                                 if (_userRole != 'admin' &&
                                     (_hasAppliedForOwner || _isOwner)) ...[
                                   if (_applicationStatus == 'approved' ||
@@ -1172,19 +1153,21 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                 Stack(
                                   children: [
                                     IconButton(
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
                                       icon: Icon(
                                         Icons.notifications_none,
                                         color: _navItems[_currentIndex].color,
-                                        size: iconSize,
+                                        size: iconSize * 0.8,
                                       ),
                                       onPressed: () {},
                                     ),
                                     Positioned(
-                                      right: 10,
-                                      top: 10,
+                                      right: 2,
+                                      top: 2,
                                       child: Container(
-                                        width: 8,
-                                        height: 8,
+                                        width: 6,
+                                        height: 6,
                                         decoration: const BoxDecoration(
                                           color: Colors.red,
                                           shape: BoxShape.circle,
@@ -1195,7 +1178,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                 ),
 
                                 SizedBox(
-                                  width: getResponsiveSpacing(width) * 0.2,
+                                  width: getResponsiveSpacing(width) * 0.3,
                                 ),
 
                                 /// Profile Avatar
@@ -1204,11 +1187,9 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                     setState(() {
                                       _currentIndex = 4;
                                     });
-
                                     _fadeController.reset();
                                     _slideController.reset();
                                     _scaleController.reset();
-
                                     _fadeController.forward();
                                     _slideController.forward();
                                     _scaleController.forward();
@@ -1222,9 +1203,8 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                       valueListenable: profileImageNotifier,
                                       builder: (context, value, child) {
                                         final imageUrl = value ?? _userPhotoUrl;
-
                                         return CircleAvatar(
-                                          radius: avatarSize / 2,
+                                          radius: avatarSize / 2.5,
                                           backgroundColor: Colors.transparent,
                                           child: imageUrl.isNotEmpty
                                               ? ClipRRect(
@@ -1232,17 +1212,31 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                                       BorderRadius.circular(
                                                         avatarSize / 2,
                                                       ),
-                                                  child: AnimatedSwitcher(
-                                                    duration: const Duration(
-                                                      milliseconds: 300,
-                                                    ),
-                                                    child: Image.network(
-                                                      imageUrl,
-                                                      key: ValueKey(imageUrl),
-                                                      fit: BoxFit.cover,
-                                                      width: avatarSize,
-                                                      height: avatarSize,
-                                                    ),
+                                                  child: Image.network(
+                                                    imageUrl,
+                                                    fit: BoxFit.cover,
+                                                    width: avatarSize,
+                                                    height: avatarSize,
+                                                    errorBuilder:
+                                                        (
+                                                          context,
+                                                          error,
+                                                          stackTrace,
+                                                        ) {
+                                                          return Icon(
+                                                            _isOwnerMode
+                                                                ? Icons.store
+                                                                : _userRole ==
+                                                                      'admin'
+                                                                ? Icons
+                                                                      .admin_panel_settings
+                                                                : Icons.person,
+                                                            color: Colors.white,
+                                                            size:
+                                                                avatarSize *
+                                                                0.5,
+                                                          );
+                                                        },
                                                   ),
                                                 )
                                               : Icon(
@@ -1271,7 +1265,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
               ),
             ),
 
-      /// NAVBAR
+      /// MODERN BOTTOM NAVIGATION BAR
       bottomNavigationBar: Padding(
         padding: EdgeInsets.only(bottom: bottomPadding),
         child: MediaQuery.removePadding(
@@ -1289,67 +1283,179 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
               getResponsiveSpacing(width) * 0.7,
             ),
             height: navbarHeight,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(40),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                child: Container(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Animated glow effect behind the bar
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  width: width - (horizontalPadding * 2),
+                  height: navbarHeight,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.85),
                     borderRadius: BorderRadius.circular(40),
                     boxShadow: [
                       BoxShadow(
-                        color: _navItems[_currentIndex].color.withOpacity(0.25),
-                        blurRadius: 25,
-                        offset: const Offset(0, 10),
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        spreadRadius: 1,
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
-                  child: Row(
-                    children: List.generate(_navItems.length, (index) {
-                      final selected = _currentIndex == index;
-                      final item = _navItems[index];
+                ),
 
-                      return Expanded(
-                        child: GestureDetector(
-                          onTap: () => _onTabTapped(index),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              AnimatedContainer(
+                // Main Navbar with unique design
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(40),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withOpacity(0.9),
+                            Colors.white.withOpacity(0.85),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(40),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.5),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Row(
+                        children: List.generate(_navItems.length, (index) {
+                          final selected = _currentIndex == index;
+                          final item = _navItems[index];
+
+                          return Expanded(
+                            child: GestureDetector(
+                              onTap: () => _onTabTapped(index),
+                              child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 250),
-                                padding: const EdgeInsets.all(8),
+                                curve: Curves.elasticOut,
+                                margin: EdgeInsets.symmetric(
+                                  vertical: selected ? 6 : 8,
+                                  horizontal: selected ? 4 : 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
+                                  borderRadius: BorderRadius.circular(30),
                                   color: selected
-                                      ? item.color.withOpacity(0.15)
+                                      ? item.color.withOpacity(0.12)
                                       : Colors.transparent,
                                 ),
-                                child: Icon(
-                                  selected ? item.selectedIcon : item.icon,
-                                  size: iconSize * 0.9,
-                                  color: selected ? item.color : Colors.grey,
+                                child: Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize
+                                        .min, // ✅ FIX: prevents overflow
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      TweenAnimationBuilder<double>(
+                                        tween: Tween<double>(
+                                          begin: selected ? 1.0 : 0.8,
+                                          end: selected ? 1.1 : 0.9,
+                                        ),
+                                        duration: const Duration(
+                                          milliseconds: 200,
+                                        ),
+                                        builder: (context, scale, child) {
+                                          return Transform.scale(
+                                            scale: scale,
+                                            child: Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                gradient: selected
+                                                    ? LinearGradient(
+                                                        colors: [
+                                                          item.color
+                                                              .withOpacity(0.2),
+                                                          item.color
+                                                              .withOpacity(
+                                                                0.05,
+                                                              ),
+                                                        ],
+                                                        begin:
+                                                            Alignment.topLeft,
+                                                        end: Alignment
+                                                            .bottomRight,
+                                                      )
+                                                    : null,
+                                              ),
+                                              child: Icon(
+                                                selected
+                                                    ? item.selectedIcon
+                                                    : item.icon,
+                                                size:
+                                                    iconSize *
+                                                    (selected ? 0.9 : 0.8),
+                                                color: selected
+                                                    ? item.color
+                                                    : Colors.grey.shade500,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+
+                                      const SizedBox(
+                                        height: 1,
+                                      ), // ✅ reduced from 2 → avoids 0.5px overflow
+
+                                      AnimatedDefaultTextStyle(
+                                        duration: const Duration(
+                                          milliseconds: 200,
+                                        ),
+                                        style: TextStyle(
+                                          fontSize:
+                                              getResponsiveFontSize(width) *
+                                              0.65,
+                                          fontWeight: selected
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
+                                          color: selected
+                                              ? item.color
+                                              : Colors.grey.shade500,
+                                          letterSpacing: 0.2,
+                                        ),
+                                        child: Text(item.shortLabel),
+                                      ),
+
+                                      if (selected)
+                                        AnimatedContainer(
+                                          duration: const Duration(
+                                            milliseconds: 200,
+                                          ),
+                                          margin: const EdgeInsets.only(top: 2),
+                                          height: 2.5,
+                                          width: 18,
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                item.color,
+                                                item.color.withOpacity(0.6),
+                                              ],
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              2,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                item.shortLabel,
-                                style: TextStyle(
-                                  fontSize: getResponsiveFontSize(width) * 0.7,
-                                  fontWeight: selected
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                  color: selected ? item.color : Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
@@ -1358,13 +1464,12 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
   }
 
   // Button builders
-
   Widget _buildOwnerButton(bool isMobile) {
     final width = MediaQuery.of(context).size.width;
-    final double buttonHorizontalPadding = isMobile ? 10.0 : 14.0;
-    final double buttonVerticalPadding = isMobile ? 5.0 : 8.0;
-    final double iconSize = getResponsiveIconSize(width) * 0.6;
-    final double fontSize = getResponsiveFontSize(width) * 0.75;
+    final double buttonHorizontalPadding = isMobile ? 8.0 : 12.0;
+    final double buttonVerticalPadding = isMobile ? 4.0 : 6.0;
+    final double iconSize = getResponsiveIconSize(width) * 0.5;
+    final double fontSize = getResponsiveFontSize(width) * 0.7;
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -1376,7 +1481,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
       child: GestureDetector(
         onTap: _handleOwnerButtonPress,
         child: Container(
-          margin: EdgeInsets.only(top: getResponsiveSpacing(width) * 1.75),
+          margin: EdgeInsets.only(right: getResponsiveSpacing(width) * 0.3),
           padding: EdgeInsets.symmetric(
             horizontal: buttonHorizontalPadding,
             vertical: buttonVerticalPadding,
@@ -1393,16 +1498,14 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-            borderRadius: BorderRadius.circular(
-              getResponsiveBorderRadius(width) * 0.75,
-            ),
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
                 color: _isOwnerMode
                     ? Colors.purple.withOpacity(0.25)
                     : Colors.orange.withOpacity(0.25),
-                blurRadius: getResponsiveBorderRadius(width) * 0.25,
-                offset: const Offset(0, 3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -1414,7 +1517,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                 color: Colors.white,
                 size: iconSize,
               ),
-              SizedBox(width: getResponsiveSpacing(width) * 0.25),
+              SizedBox(width: getResponsiveSpacing(width) * 0.2),
               Text(
                 _isOwnerMode ? 'Customer' : 'Owner',
                 style: TextStyle(
@@ -1432,26 +1535,24 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
 
   Widget _buildPendingButton(bool isMobile) {
     final width = MediaQuery.of(context).size.width;
-    final double buttonHorizontalPadding = isMobile ? 10.0 : 14.0;
-    final double buttonVerticalPadding = isMobile ? 5.0 : 8.0;
-    final double iconSize = getResponsiveIconSize(width) * 0.5;
-    final double fontSize = getResponsiveFontSize(width) * 0.7;
+    final double buttonHorizontalPadding = isMobile ? 8.0 : 12.0;
+    final double buttonVerticalPadding = isMobile ? 4.0 : 6.0;
+    final double iconSize = getResponsiveIconSize(width) * 0.45;
+    final double fontSize = getResponsiveFontSize(width) * 0.65;
 
     return GestureDetector(
       onTap: _handleOwnerButtonPress,
       child: ScaleTransition(
         scale: _pulseAnimation,
         child: Container(
-          margin: EdgeInsets.only(top: getResponsiveSpacing(width) * 1.75),
+          margin: EdgeInsets.only(right: getResponsiveSpacing(width) * 0.3),
           padding: EdgeInsets.symmetric(
             horizontal: buttonHorizontalPadding,
             vertical: buttonVerticalPadding,
           ),
           decoration: BoxDecoration(
             color: Colors.orange.shade50,
-            borderRadius: BorderRadius.circular(
-              getResponsiveBorderRadius(width) * 0.75,
-            ),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.orange.shade300, width: 1),
           ),
           child: Row(
@@ -1461,15 +1562,15 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                 width: iconSize,
                 height: iconSize,
                 child: CircularProgressIndicator(
-                  strokeWidth: 1.8,
+                  strokeWidth: 1.5,
                   valueColor: AlwaysStoppedAnimation<Color>(
                     Colors.orange.shade700,
                   ),
                 ),
               ),
-              SizedBox(width: getResponsiveSpacing(width) * 0.3),
+              SizedBox(width: getResponsiveSpacing(width) * 0.2),
               Text(
-                isMobile ? 'Review' : 'Under Review',
+                isMobile ? 'Review' : 'Review',
                 style: TextStyle(
                   color: Colors.orange.shade700,
                   fontSize: fontSize,
@@ -1485,24 +1586,22 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
 
   Widget _buildRejectedButton(bool isMobile) {
     final width = MediaQuery.of(context).size.width;
-    final double buttonHorizontalPadding = isMobile ? 10.0 : 14.0;
-    final double buttonVerticalPadding = isMobile ? 5.0 : 8.0;
-    final double iconSize = getResponsiveIconSize(width) * 0.5;
-    final double fontSize = getResponsiveFontSize(width) * 0.7;
+    final double buttonHorizontalPadding = isMobile ? 8.0 : 12.0;
+    final double buttonVerticalPadding = isMobile ? 4.0 : 6.0;
+    final double iconSize = getResponsiveIconSize(width) * 0.45;
+    final double fontSize = getResponsiveFontSize(width) * 0.65;
 
     return GestureDetector(
       onTap: _handleOwnerButtonPress,
       child: Container(
-        margin: EdgeInsets.only(top: getResponsiveSpacing(width) * 1.75),
+        margin: EdgeInsets.only(right: getResponsiveSpacing(width) * 0.3),
         padding: EdgeInsets.symmetric(
           horizontal: buttonHorizontalPadding,
           vertical: buttonVerticalPadding,
         ),
         decoration: BoxDecoration(
           color: Colors.red.shade50,
-          borderRadius: BorderRadius.circular(
-            getResponsiveBorderRadius(width) * 0.75,
-          ),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.red.shade300, width: 1),
         ),
         child: Row(
@@ -1513,7 +1612,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
               color: Colors.red.shade700,
               size: iconSize,
             ),
-            SizedBox(width: getResponsiveSpacing(width) * 0.3),
+            SizedBox(width: getResponsiveSpacing(width) * 0.2),
             Text(
               'Rejected',
               style: TextStyle(
@@ -1530,24 +1629,22 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
 
   Widget _buildAppliedButton(bool isMobile) {
     final width = MediaQuery.of(context).size.width;
-    final double buttonHorizontalPadding = isMobile ? 10.0 : 14.0;
-    final double buttonVerticalPadding = isMobile ? 5.0 : 8.0;
-    final double iconSize = getResponsiveIconSize(width) * 0.5;
-    final double fontSize = getResponsiveFontSize(width) * 0.7;
+    final double buttonHorizontalPadding = isMobile ? 8.0 : 12.0;
+    final double buttonVerticalPadding = isMobile ? 4.0 : 6.0;
+    final double iconSize = getResponsiveIconSize(width) * 0.45;
+    final double fontSize = getResponsiveFontSize(width) * 0.65;
 
     return GestureDetector(
       onTap: _handleOwnerButtonPress,
       child: Container(
-        margin: EdgeInsets.only(top: getResponsiveSpacing(width) * 1.75),
+        margin: EdgeInsets.only(right: getResponsiveSpacing(width) * 0.3),
         padding: EdgeInsets.symmetric(
           horizontal: buttonHorizontalPadding,
           vertical: buttonVerticalPadding,
         ),
         decoration: BoxDecoration(
           color: Colors.blue.shade50,
-          borderRadius: BorderRadius.circular(
-            getResponsiveBorderRadius(width) * 0.75,
-          ),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.blue.shade300, width: 1),
         ),
         child: Row(
@@ -1558,7 +1655,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
               color: Colors.blue.shade700,
               size: iconSize,
             ),
-            SizedBox(width: getResponsiveSpacing(width) * 0.3),
+            SizedBox(width: getResponsiveSpacing(width) * 0.2),
             Text(
               'Applied',
               style: TextStyle(

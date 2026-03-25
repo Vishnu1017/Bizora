@@ -137,6 +137,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           'createdAt': FieldValue.serverTimestamp(),
           'lastLogin': FieldValue.serverTimestamp(),
           'emailVerified': user.emailVerified,
+
+          // ✅ ADD THIS
+          'accountLocked': false,
+          'lockReason': null,
         });
       } else {
         // Update existing user
@@ -145,6 +149,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           'photoURL': user.photoURL,
           'displayName': user.displayName ?? user.email?.split('@')[0],
           'emailVerified': user.emailVerified,
+
+          // ✅ ensure fields exist
+          'accountLocked': false,
+          'lockReason': null,
         });
       }
     } catch (e) {

@@ -312,7 +312,9 @@ class _ProfilePageState extends State<ProfilePage>
           final data = doc.data()!;
 
           // Account locked check
-          if (data['accountLocked'] == true) {
+          final isLocked = (data['accountLocked'] ?? false) == true;
+
+          if (isLocked) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
                 FirebaseSnackbar.error(
@@ -358,7 +360,7 @@ class _ProfilePageState extends State<ProfilePage>
 
           setState(() {
             _userData = data;
-
+            _userData!['accountLocked'] ??= false;
             final role = _userData?['role']?.toString().toLowerCase();
             final isApproved = _userData?['isApproved'] ?? false;
 

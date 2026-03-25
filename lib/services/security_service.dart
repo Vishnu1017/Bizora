@@ -11,6 +11,8 @@ import 'dart:io';
 
 enum SecurityLevel { low, medium, high, maximum }
 
+// 🔥 ONLY CHANGES INSIDE THIS FILE (NO FUNCTION REMOVED)
+
 class SecurityService {
   static final SecurityService _instance = SecurityService._internal();
   factory SecurityService() => _instance;
@@ -18,16 +20,19 @@ class SecurityService {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
 
-  // Rate limiting
+  // ✅ IMPROVED RATE LIMITING
   final Map<String, List<DateTime>> _actionTimestamps = {};
-  static const int _maxAttempts = 3;
+  static const int _maxAttempts = 5; // 🔥 increased
   static const Duration _rateLimitWindow = Duration(minutes: 15);
 
-  // Suspicious activity tracking
+  // ✅ IMPROVED SUSPICIOUS TRACKING
   final Map<String, int> _suspiciousActivities = {};
-  static const int _maxSuspiciousActivities = 3;
+  final Map<String, DateTime> _lastSuspiciousReset = {};
 
-  // Encryption key (in production, this should be stored in secure hardware)
+  static const int _maxSuspiciousActivities = 8; // 🔥 increased (important)
+  static const Duration _suspiciousCooldown = Duration(minutes: 30);
+
+  // Encryption
   static const String _encryptionKey = 'your-32-character-encryption-key!!';
   late final encrypt.Encrypter _encrypter;
   late final encrypt.IV _iv;
@@ -38,7 +43,7 @@ class SecurityService {
     _encrypter = encrypt.Encrypter(encrypt.AES(key));
   }
 
-  /// Rate limiting check
+  /// ✅ RATE LIMIT (SAFE)
   bool checkRateLimit(String userId, String action) {
     final key = '$userId:$action';
     final now = DateTime.now();
@@ -48,7 +53,6 @@ class SecurityService {
       return true;
     }
 
-    // Remove old timestamps
     _actionTimestamps[key] = _actionTimestamps[key]!
         .where((time) => now.difference(time) < _rateLimitWindow)
         .toList();
@@ -61,14 +65,22 @@ class SecurityService {
     return true;
   }
 
-  /// Log suspicious activity
+  /// ✅ FIXED SUSPICIOUS ACTIVITY (NO RANDOM LOCKS)
   Future<void> logSuspiciousActivity(String userId, String activity) async {
+    final now = DateTime.now();
+
+    // 🔥 RESET COUNTER AFTER COOLDOWN
+    if (_lastSuspiciousReset[userId] == null ||
+        now.difference(_lastSuspiciousReset[userId]!) > _suspiciousCooldown) {
+      _suspiciousActivities[userId] = 0;
+      _lastSuspiciousReset[userId] = now;
+    }
+
     _suspiciousActivities[userId] = (_suspiciousActivities[userId] ?? 0) + 1;
 
-    // Get device info
     final deviceInfo = await getDeviceInfo();
 
-    // Store in Firestore for security audit
+    // 🔥 ALWAYS LOG (for audit)
     await FirebaseFirestore.instance.collection('security_logs').add({
       'userId': userId,
       'activity': activity,
@@ -78,13 +90,32 @@ class SecurityService {
       'severity': 'WARNING',
     });
 
-    // If too many suspicious activities, lock account
+    print("⚠️ Suspicious count for $userId = ${_suspiciousActivities[userId]}");
+
+    // ✅ 🔥 ONLY LOCK IF REALLY EXCESSIVE
     if (_suspiciousActivities[userId]! >= _maxSuspiciousActivities) {
-      await lockAccount(userId, 'Multiple suspicious activities detected');
+      print("🚨 High suspicious activity detected (not locking immediately)");
+
+      // 🔥 Instead of locking immediately → just alert
+      await FirebaseFirestore.instance.collection('security_alerts').add({
+        'userId': userId,
+        'message': 'High suspicious activity detected',
+        'count': _suspiciousActivities[userId],
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      // ❗ OPTIONAL HARD LOCK (VERY STRICT)
+      // Uncomment ONLY if needed:
+      /*
+      await lockAccount(
+        userId,
+        'Excessive suspicious activity detected',
+      );
+      */
     }
   }
 
-  /// Lock account
+  /// 🔒 LOCK ACCOUNT (UNCHANGED)
   Future<void> lockAccount(String userId, String reason) async {
     await FirebaseFirestore.instance.collection('users').doc(userId).update({
       'accountLocked': true,
@@ -94,24 +125,22 @@ class SecurityService {
     });
   }
 
-  /// Generate audit hash
+  /// HASH (UNCHANGED)
   String generateAuditHash(Map<String, dynamic> data) {
     final jsonString = jsonEncode(FirestoreConverter.convert(data));
     return sha256.convert(utf8.encode(jsonString)).toString();
   }
 
-  /// Verify data integrity
   bool verifyDataIntegrity(Map<String, dynamic> data, String hash) {
     final computedHash = generateAuditHash(data);
     return computedHash == hash;
   }
 
-  /// Encrypt sensitive data
+  /// ENCRYPTION (UNCHANGED)
   String encryptData(String data) {
     return _encrypter.encrypt(data, iv: _iv).base64;
   }
 
-  /// Decrypt sensitive data
   String decryptData(String encryptedData) {
     try {
       return _encrypter.decrypt64(encryptedData, iv: _iv);
@@ -120,7 +149,7 @@ class SecurityService {
     }
   }
 
-  /// Get device fingerprint
+  /// DEVICE INFO (UNCHANGED)
   Future<Map<String, dynamic>> getDeviceInfo() async {
     if (Platform.isIOS) {
       final iosInfo = await _deviceInfo.iosInfo;
@@ -141,30 +170,26 @@ class SecurityService {
     }
   }
 
-  /// Get app version
   Future<String> getAppVersion() async {
     final packageInfo = await PackageInfo.fromPlatform();
     return packageInfo.version;
   }
 
-  /// Store biometric key
   Future<void> storeBiometricKey(String key, String value) async {
     await _secureStorage.write(key: key, value: value);
   }
 
-  /// Retrieve biometric key
   Future<String?> getBiometricKey(String key) async {
     return await _secureStorage.read(key: key);
   }
 
-  /// Generate secure random token
   String generateSecureToken() {
     final random = Random.secure();
     final values = List<int>.generate(32, (i) => random.nextInt(256));
     return base64Url.encode(values);
   }
 
-  /// Validate session
+  /// SESSION VALIDATION (UNCHANGED)
   Future<bool> validateSession(String userId, String sessionToken) async {
     try {
       final doc = await FirebaseFirestore.instance
@@ -183,7 +208,6 @@ class SecurityService {
     }
   }
 
-  /// Create session
   Future<String> createSession(String userId) async {
     final sessionToken = generateSecureToken();
     final expiry = DateTime.now().add(const Duration(hours: 24));
@@ -202,7 +226,6 @@ class SecurityService {
     return sessionToken;
   }
 
-  /// End session
   Future<void> endSession(String userId, String sessionToken) async {
     await FirebaseFirestore.instance
         .collection('sessions')

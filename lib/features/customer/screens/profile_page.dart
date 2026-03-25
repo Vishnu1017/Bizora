@@ -59,7 +59,6 @@ class _ProfilePageState extends State<ProfilePage>
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
-
   late AnimationController _refreshController;
   late Animation<double> _fadeAnimation;
 
@@ -838,7 +837,7 @@ class _ProfilePageState extends State<ProfilePage>
                                     ],
                                   ),
 
-                                  if (_user?.photoURL != null) ...[
+                                  if (_userData?['photoURL'] != null) ...[
                                     SizedBox(height: isMobileDevice ? 10 : 12),
 
                                     _glassOption(
@@ -1108,14 +1107,17 @@ class _ProfilePageState extends State<ProfilePage>
       final snapshot = await uploadTask;
       final downloadUrl = await snapshot.ref.getDownloadURL();
 
+      // 🔥 FIX: prevent cache issue across devices
+      final uniqueUrl =
+          "$downloadUrl?time=${DateTime.now().millisecondsSinceEpoch}";
       // 🔥 UPDATE AUTH
-      await _user?.updatePhotoURL(downloadUrl);
+      await _user?.updatePhotoURL(uniqueUrl);
       await _user?.reload();
       _user = FirebaseAuth.instance.currentUser;
 
       // 🔥 UPDATE FIRESTORE
       await FirebaseFirestore.instance.collection("users").doc(uid).update({
-        "photoURL": downloadUrl,
+        "photoURL": uniqueUrl,
         "updatedAt": FieldValue.serverTimestamp(),
       });
 
@@ -1314,6 +1316,7 @@ class _ProfilePageState extends State<ProfilePage>
     final TextEditingController nameController = TextEditingController(
       text: _nameController.text,
     );
+    final imageUrl = _userData?['photoURL'];
 
     // Strip +91 from phone number if it exists
     String storedPhone = _phoneController.text;
@@ -1425,10 +1428,10 @@ class _ProfilePageState extends State<ProfilePage>
                                     radius:
                                         getResponsiveAvatarSize(width) * 0.75,
                                     backgroundColor: Colors.deepPurple.shade100,
-                                    backgroundImage: _user?.photoURL != null
-                                        ? NetworkImage(_user!.photoURL!)
+                                    backgroundImage: imageUrl != null
+                                        ? NetworkImage(imageUrl)
                                         : null,
-                                    child: _user?.photoURL == null
+                                    child: _userData?['photoURL'] == null
                                         ? Text(
                                             nameController.text.isNotEmpty
                                                 ? nameController.text[0]
@@ -2361,6 +2364,7 @@ class _ProfilePageState extends State<ProfilePage>
     final double borderRadius = getResponsiveBorderRadius(width);
     final double horizontalPadding = getResponsiveHorizontalPadding(width);
     final double verticalSpacing = getResponsiveVerticalSpacing(width);
+    final imageUrl = _userData?['photoURL'];
 
     return Container(
       width: double.infinity,
@@ -2417,10 +2421,11 @@ class _ProfilePageState extends State<ProfilePage>
                       CircleAvatar(
                         radius: avatarRadius * 0.5,
                         backgroundColor: Colors.white,
-                        backgroundImage: _user?.photoURL != null
-                            ? NetworkImage(_user!.photoURL!)
+
+                        backgroundImage: imageUrl != null
+                            ? NetworkImage(imageUrl)
                             : null,
-                        child: _user?.photoURL == null
+                        child: _userData?['photoURL'] == null
                             ? Text(
                                 _nameController.text.isNotEmpty
                                     ? _nameController.text[0].toUpperCase()

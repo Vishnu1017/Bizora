@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui';
 import 'package:bizora/core/utils/firebase_snackbar.dart';
 import 'package:bizora/core/utils/profile_image_notifier.dart';
 import 'package:bizora/features/auth/screens/splash_screen.dart';
@@ -14,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -655,32 +657,253 @@ class _ProfilePageState extends State<ProfilePage>
     if (_isUploading) return;
 
     try {
-      final action = await showDialog<ImageAction>(
+      final width = MediaQuery.of(context).size.width;
+      final isMobileDevice = isMobile(width);
+      final isTabletDevice = isTablet(width);
+      final double borderRadius = getResponsiveBorderRadius(width);
+      final double iconSize = getResponsiveIconSize(width);
+      final double fontSize = getResponsiveFontSize(width);
+      final double cardSpacing = getResponsiveCardSpacing(width);
+      final double verticalSpacing = getResponsiveVerticalSpacing(width);
+
+      final action = await showModalBottomSheet<ImageAction>(
         context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        barrierColor: Colors.black.withOpacity(0.5),
         builder: (context) {
-          return AlertDialog(
-            title: const Text('Profile Picture'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.photo),
-                  title: const Text('Gallery'),
-                  onTap: () => Navigator.pop(context, ImageAction.gallery),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.camera),
-                  title: const Text('Camera'),
-                  onTap: () => Navigator.pop(context, ImageAction.camera),
-                ),
-                if (_user?.photoURL != null)
-                  ListTile(
-                    leading: const Icon(Icons.delete, color: Colors.red),
-                    title: const Text('Remove Photo'),
-                    onTap: () => Navigator.pop(context, ImageAction.remove),
-                  ),
-              ],
-            ),
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              return TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOutExpo,
+                tween: Tween(begin: 0, end: 1),
+                builder: (context, value, child) {
+                  return Transform.translate(
+                    offset: Offset(0, (1 - value) * 120),
+                    child: Opacity(
+                      opacity: value,
+                      child: Container(
+                        margin: EdgeInsets.symmetric(
+                          horizontal: isMobileDevice
+                              ? 0
+                              : (isTabletDevice ? width * 0.1 : width * 0.15),
+                          vertical: isMobileDevice ? 0 : verticalSpacing * 2,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(
+                            borderRadius * 1.4,
+                          ),
+                          color: Colors.white.withOpacity(0.95),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 20,
+                              offset: const Offset(0, -5),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            borderRadius * 1.4,
+                          ),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                            child: Padding(
+                              padding: EdgeInsets.all(
+                                isMobileDevice
+                                    ? cardSpacing * 1.2
+                                    : cardSpacing * 1.5,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  /// 🔹 HEADER
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.all(
+                                          getResponsiveVerticalSpacing(width) *
+                                              0.45,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              Colors.deepPurple.shade600,
+                                              Colors.deepPurple.shade400,
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            borderRadius * 0.6,
+                                          ),
+                                        ),
+                                        child: HugeIcon(
+                                          icon:
+                                              HugeIcons.strokeRoundedImageAdd02,
+                                          color: Colors.white,
+                                          size: iconSize,
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width:
+                                            getResponsiveVerticalSpacing(
+                                              width,
+                                            ) *
+                                            0.30,
+                                      ),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "Profile Photo",
+                                              style: TextStyle(
+                                                fontSize: isMobileDevice
+                                                    ? fontSize + 2
+                                                    : fontSize + 3,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Text(
+                                              "Upload or change your picture",
+                                              style: TextStyle(
+                                                fontSize: isMobileDevice
+                                                    ? fontSize - 2
+                                                    : fontSize - 1,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      IconButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        icon: Icon(
+                                          Icons.close_rounded,
+                                          size: isMobileDevice ? 20 : 22,
+                                        ),
+                                        constraints: const BoxConstraints(),
+                                        padding: EdgeInsets.all(
+                                          isMobileDevice ? 8 : 10,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  SizedBox(
+                                    height: isMobileDevice
+                                        ? cardSpacing * 1.2
+                                        : cardSpacing * 1.5,
+                                  ),
+
+                                  /// 🔹 GRID OPTIONS (MODERN)
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _glassOption(
+                                          icon: Icons.photo_library_rounded,
+                                          label: "Gallery",
+                                          color: Colors.blue,
+                                          onTap: () => Navigator.pop(
+                                            context,
+                                            ImageAction.gallery,
+                                          ),
+                                          width: width,
+                                          isMobile: isMobileDevice,
+                                          borderRadius: borderRadius,
+                                          iconSize: iconSize,
+                                          fontSize: fontSize,
+                                        ),
+                                      ),
+                                      SizedBox(width: isMobileDevice ? 10 : 12),
+                                      Expanded(
+                                        child: _glassOption(
+                                          icon: Icons.camera_alt_rounded,
+                                          label: "Camera",
+                                          color: Colors.green,
+                                          onTap: () => Navigator.pop(
+                                            context,
+                                            ImageAction.camera,
+                                          ),
+                                          width: width,
+                                          isMobile: isMobileDevice,
+                                          borderRadius: borderRadius,
+                                          iconSize: iconSize,
+                                          fontSize: fontSize,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  if (_user?.photoURL != null) ...[
+                                    SizedBox(height: isMobileDevice ? 10 : 12),
+
+                                    _glassOption(
+                                      icon: Icons.delete_outline_rounded,
+                                      label: "Remove Photo",
+                                      color: Colors.red,
+                                      isFullWidth: true,
+                                      isDanger: true,
+                                      onTap: () => Navigator.pop(
+                                        context,
+                                        ImageAction.remove,
+                                      ),
+                                      width: width,
+                                      isMobile: isMobileDevice,
+                                      borderRadius: borderRadius,
+                                      iconSize: iconSize,
+                                      fontSize: fontSize,
+                                    ),
+                                  ],
+
+                                  SizedBox(
+                                    height: isMobileDevice
+                                        ? cardSpacing * 1.2
+                                        : cardSpacing * 1.5,
+                                  ),
+
+                                  /// 🔹 CANCEL BUTTON
+                                  GestureDetector(
+                                    onTap: () => Navigator.pop(context),
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: isMobileDevice ? 12 : 14,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(
+                                          borderRadius * 0.8,
+                                        ),
+                                        color: Colors.grey.shade100,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          "Cancel",
+                                          style: TextStyle(
+                                            fontSize: isMobileDevice
+                                                ? fontSize
+                                                : fontSize + 1,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.grey.shade700,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
           );
         },
       );
@@ -696,17 +919,164 @@ class _ProfilePageState extends State<ProfilePage>
           ? ImageSource.camera
           : ImageSource.gallery;
 
-      await Future.delayed(const Duration(milliseconds: 200));
+      // Show loading indicator BEFORE picking image
+      if (mounted) {
+        setState(() {
+          _isUploading = true;
+        });
+      }
+
+      // Add a small delay to show loading state
+      await Future.delayed(const Duration(milliseconds: 100));
 
       final picker = ImagePicker();
-      final image = await picker.pickImage(source: source, imageQuality: 80);
+      final image = await picker.pickImage(
+        source: source,
+        imageQuality: 85,
+        maxWidth: 1024,
+        maxHeight: 1024,
+      );
 
-      if (image != null) {
+      if (image != null && mounted) {
         await _uploadImageToFirebase(File(image.path));
+      } else if (mounted) {
+        // If no image selected, just hide loading
+        setState(() {
+          _isUploading = false;
+        });
       }
     } catch (e) {
       print("Image pick error: $e");
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+
+        final width = MediaQuery.of(context).size.width;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  color: Colors.white,
+                  size: getResponsiveIconSize(width) * 0.7,
+                ),
+                SizedBox(width: getResponsiveCardSpacing(width) * 0.5),
+                Expanded(
+                  child: Text(
+                    'Failed to pick image: ${e.toString()}',
+                    style: TextStyle(
+                      fontSize: getResponsiveFontSize(width) * 0.9,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(
+                getResponsiveBorderRadius(width) * 0.6,
+              ),
+            ),
+            margin: EdgeInsets.all(getResponsiveCardSpacing(width)),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
+  }
+
+  // Enhanced helper method for modern option cards with full responsiveness
+  Widget _glassOption({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+    required double width,
+    required bool isMobile,
+    required double borderRadius,
+    required double iconSize,
+    required double fontSize,
+    bool isFullWidth = false,
+    bool isDanger = false,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(borderRadius * 0.7),
+        child: Container(
+          width: isFullWidth ? double.infinity : null,
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 12 : 16,
+            vertical: isMobile ? 14 : 16,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(borderRadius * 0.7),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                color.withOpacity(isDanger ? 0.1 : 0.15),
+                color.withOpacity(isDanger ? 0.05 : 0.08),
+              ],
+            ),
+            border: Border.all(
+              color: color.withOpacity(isDanger ? 0.3 : 0.2),
+              width: 1,
+            ),
+          ),
+          child: isFullWidth
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      icon,
+                      color: isDanger ? Colors.red : color,
+                      size: isMobile ? iconSize * 0.7 : iconSize * 0.8,
+                    ),
+                    SizedBox(width: isMobile ? 8 : 10),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: isMobile ? fontSize - 1 : fontSize,
+                        fontWeight: FontWeight.w600,
+                        color: isDanger ? Colors.red : Colors.grey.shade800,
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(isMobile ? 8 : 10),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        icon,
+                        color: color,
+                        size: isMobile ? iconSize * 0.8 : iconSize,
+                      ),
+                    ),
+                    SizedBox(height: isMobile ? 6 : 8),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: isMobile ? fontSize - 2 : fontSize - 1,
+                        fontWeight: FontWeight.w600,
+                        color: isDanger ? Colors.red : Colors.grey.shade800,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
   }
 
   Future<void> _uploadImageToFirebase(File imageFile) async {

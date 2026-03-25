@@ -1166,9 +1166,6 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                     _buildRejectedButton(isMobile(width))
                                   else if (_hasAppliedForOwner)
                                     _buildAppliedButton(isMobile(width)),
-                                  SizedBox(
-                                    width: getResponsiveSpacing(width) * 0.15,
-                                  ),
                                 ],
 
                                 // Notification
@@ -1198,7 +1195,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                 ),
 
                                 SizedBox(
-                                  width: getResponsiveSpacing(width) * 0.3,
+                                  width: getResponsiveSpacing(width) * 0.2,
                                 ),
 
                                 /// Profile Avatar
@@ -1229,8 +1226,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                                         return CircleAvatar(
                                           radius: avatarSize / 2,
                                           backgroundColor: Colors.transparent,
-                                          child:
-                                              imageUrl.isNotEmpty
+                                          child: imageUrl.isNotEmpty
                                               ? ClipRRect(
                                                   borderRadius:
                                                       BorderRadius.circular(
@@ -1418,7 +1414,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                 color: Colors.white,
                 size: iconSize,
               ),
-              SizedBox(width: getResponsiveSpacing(width) * 0.3),
+              SizedBox(width: getResponsiveSpacing(width) * 0.25),
               Text(
                 _isOwnerMode ? 'Customer' : 'Owner',
                 style: TextStyle(

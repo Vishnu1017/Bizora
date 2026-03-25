@@ -1122,8 +1122,7 @@ class _ProfilePageState extends State<ProfilePage>
       });
 
       // 🚀🔥 INSTANT UI UPDATE (KEY PART)
-      profileImageNotifier.value = downloadUrl;
-
+      profileImageNotifier.value = uniqueUrl;
       if (mounted) {
         setState(() => _isUploading = false);
 
@@ -1314,7 +1313,7 @@ class _ProfilePageState extends State<ProfilePage>
   void _showEditProfileDialog() {
     // Create controllers for all fields
     final TextEditingController nameController = TextEditingController(
-      text: _nameController.text,
+      text: _userData?['displayName'] ?? _user?.displayName ?? '',
     );
     final imageUrl = _userData?['photoURL'];
 
@@ -1444,7 +1443,7 @@ class _ProfilePageState extends State<ProfilePage>
                                                   getResponsiveAvatarSize(
                                                     width,
                                                   ) *
-                                                  0.38,
+                                                  0.75,
                                               fontWeight: FontWeight.bold,
                                               color: Colors.deepPurple,
                                             ),
@@ -1452,13 +1451,13 @@ class _ProfilePageState extends State<ProfilePage>
                                         : null,
                                   ),
                                   Positioned(
-                                    bottom: 1,
+                                    bottom: 0,
                                     right: 0,
                                     child: Container(
                                       width:
-                                          getResponsiveAvatarSize(width) * 0.55,
+                                          getResponsiveAvatarSize(width) * 0.65,
                                       height:
-                                          getResponsiveAvatarSize(width) * 0.55,
+                                          getResponsiveAvatarSize(width) * 0.65,
                                       decoration: BoxDecoration(
                                         color: Colors.deepPurple,
                                         shape: BoxShape.circle,
@@ -2365,6 +2364,7 @@ class _ProfilePageState extends State<ProfilePage>
     final double horizontalPadding = getResponsiveHorizontalPadding(width);
     final double verticalSpacing = getResponsiveVerticalSpacing(width);
     final imageUrl = _userData?['photoURL'];
+    final name = _userData?['displayName'] ?? _user?.displayName ?? "";
 
     return Container(
       width: double.infinity,
@@ -2427,8 +2427,8 @@ class _ProfilePageState extends State<ProfilePage>
                             : null,
                         child: _userData?['photoURL'] == null
                             ? Text(
-                                _nameController.text.isNotEmpty
-                                    ? _nameController.text[0].toUpperCase()
+                                name.isNotEmpty
+                                    ? name[0].toUpperCase()
                                     : (_user?.email?[0].toUpperCase() ?? "U"),
                                 style: TextStyle(
                                   fontSize: avatarRadius * 0.4,
@@ -2470,9 +2470,7 @@ class _ProfilePageState extends State<ProfilePage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _nameController.text.isNotEmpty
-                            ? _nameController.text
-                            : (_user?.displayName ?? "User"),
+                        name.isNotEmpty ? name : "User",
                         style: GoogleFonts.poppins(
                           color: Colors.white,
                           fontSize: headingFontSize * 0.75,
@@ -2586,7 +2584,7 @@ class _ProfilePageState extends State<ProfilePage>
                         child: Icon(
                           _isUploading ? Icons.hourglass_empty : Icons.edit,
                           color: Colors.white,
-                          size: iconSize * 0.75,
+                          size: iconSize * 0.85,
                         ),
                       ),
                     ),

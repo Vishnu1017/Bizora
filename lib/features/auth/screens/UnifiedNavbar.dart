@@ -325,7 +325,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                   ? (hasApplied ? 'pending' : '')
                   : applicationStatus;
               _userName = data['name'] ?? user.displayName ?? 'User';
-              _userPhotoUrl = data['photoUrl'] ?? user.photoURL ?? '';
+              _userPhotoUrl = data['photoURL'] ?? user.photoURL ?? '';
               _isOwnerMode = false;
               _initializeNavigation();
               _isLoading = false;
@@ -408,7 +408,7 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                       ? (hasApplied ? 'pending' : '')
                       : applicationStatus;
                   _userName = data['name'] ?? user.displayName ?? 'User';
-                  _userPhotoUrl = data['photoUrl'] ?? user.photoURL ?? '';
+                  _userPhotoUrl = data['photoURL'] ?? user.photoURL ?? '';
 
                   _initializeNavigation();
                 });

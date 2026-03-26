@@ -1,10 +1,10 @@
 import 'dart:async';
 
+import 'package:bizora/features/auth/screens/UnifiedNavbar.dart';
 import 'package:bizora/features/owner/screens/owner_navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:bizora/features/customer/screens/customer_navbar.dart';
 
 class WaitingScreen extends StatefulWidget {
   final String? message;
@@ -90,7 +90,7 @@ class _WaitingScreenState extends State<WaitingScreen>
         if (mounted) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => const CustomerNavbar()),
+            MaterialPageRoute(builder: (_) => const UnifiedNavbar()),
           );
         }
       });
@@ -156,7 +156,7 @@ class _WaitingScreenState extends State<WaitingScreen>
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (_) => const CustomerNavbar()),
+                    MaterialPageRoute(builder: (_) => const UnifiedNavbar()),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -179,7 +179,7 @@ class _WaitingScreenState extends State<WaitingScreen>
     // Navigate back to customer navbar
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const CustomerNavbar()),
+      MaterialPageRoute(builder: (_) => const UnifiedNavbar()),
     );
   }
 

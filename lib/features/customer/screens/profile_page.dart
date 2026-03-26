@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'dart:ui';
 import 'package:bizora/core/utils/firebase_snackbar.dart';
 import 'package:bizora/core/utils/profile_image_notifier.dart';
+import 'package:bizora/core/utils/user_data_notifier.dart';
 import 'package:bizora/features/auth/screens/splash_screen.dart';
 import 'package:bizora/features/customer/screens/become_seller_info.dart';
 import 'package:bizora/services/security_service.dart';
@@ -23,7 +24,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 enum ImageAction { gallery, camera, remove }
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  final VoidCallback? onNameUpdated; // Changed to optional
+  const ProfilePage({super.key, this.onNameUpdated});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -370,13 +372,14 @@ class _ProfilePageState extends State<ProfilePage>
                 _userData?['hasAppliedForOwner'] == true &&
                 _userData?['applicationStatus'] == 'pending';
 
-            _nameController.text =
-                _userData?['displayName'] ?? _user?.displayName ?? '';
+            // 🔥 CRITICAL FIX: Use the notifier value if available, otherwise use Firestore data
+            final notifierName = userNameNotifier.value;
+            final displayName =
+                notifierName ?? data['displayName'] ?? _user?.displayName ?? '';
 
-            _phoneController.text =
-                _userData?['phone'] ?? _user?.phoneNumber ?? '';
-
-            _bioController.text = _userData?['bio'] ?? '';
+            _nameController.text = displayName;
+            _phoneController.text = data['phone'] ?? _user?.phoneNumber ?? '';
+            _bioController.text = data['bio'] ?? '';
           });
 
           _initializeTimestamps();
@@ -587,8 +590,21 @@ class _ProfilePageState extends State<ProfilePage>
       // Update Auth if needed
       if (name.isNotEmpty && name != _user?.displayName) {
         await _user!.updateDisplayName(name);
-      }
 
+        // Update the notifier for immediate UI update
+        userNameNotifier.value = name;
+
+        // 🔥 CRITICAL: Also update the local _userData immediately
+        setState(() {
+          _userData?['displayName'] = name;
+          _nameController.text = name;
+        });
+
+        // Also call the callback if provided (for backward compatibility)
+        if (widget.onNameUpdated != null) {
+          widget.onNameUpdated!();
+        }
+      }
       if (updateData.containsKey('email') && email != _user?.email) {
         await _user!.verifyBeforeUpdateEmail(email);
 
@@ -639,15 +655,33 @@ class _ProfilePageState extends State<ProfilePage>
           .doc(_user!.uid)
           .snapshots()
           .listen((doc) {
-            if (doc.exists) {
+            if (doc.exists && mounted) {
+              final data = doc.data()!;
+
+              // 🔥 CRITICAL: Check notifier before updating
+              final notifierName = userNameNotifier.value;
+              final displayName =
+                  notifierName ??
+                  data['displayName'] ??
+                  _user?.displayName ??
+                  '';
+
               setState(() {
-                _userData = doc.data();
+                _userData = data;
                 final role = _userData?['role']?.toString().toLowerCase();
                 final isApproved = _userData?['isApproved'] ?? false;
                 _isOwner = role == 'owner' && isApproved;
                 _hasPendingApplication =
                     _userData?['hasAppliedForOwner'] == true &&
                     _userData?['applicationStatus'] == 'pending';
+
+                // Only update name if notifier doesn't have a newer value
+                if (notifierName == null || notifierName == displayName) {
+                  _nameController.text = displayName;
+                }
+                _phoneController.text =
+                    data['phone'] ?? _user?.phoneNumber ?? '';
+                _bioController.text = data['bio'] ?? '';
               });
             }
           });

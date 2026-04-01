@@ -1160,169 +1160,188 @@ class _UnifiedNavbarState extends State<UnifiedNavbar>
                               ),
                             ),
 
-                            // Right Section - All actions properly aligned to the right
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                /// OWNER BUTTON - Shows when applicable (including on profile page)
-                                if (_userRole != 'admin' &&
-                                    (_hasAppliedForOwner || _isOwner)) ...[
-                                  if (_applicationStatus == 'approved' ||
-                                      _isOwner)
-                                    _buildOwnerButton(isMobile(width))
-                                  else if (_applicationStatus == 'pending')
-                                    _buildPendingButton(isMobile(width))
-                                  else if (_applicationStatus == 'rejected')
-                                    _buildRejectedButton(isMobile(width))
-                                  else if (_hasAppliedForOwner)
-                                    _buildAppliedButton(isMobile(width)),
-                                ],
-
-                                /// NOTIFICATION ICON - Always shows (including on profile page)
-                                Stack(
-                                  children: [
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.notifications_none_rounded,
-                                        color: _navItems[_currentIndex].color,
-                                        size: iconSize * 0.8,
-                                      ),
-                                      onPressed: () {},
-                                    ),
-                                    Positioned(
-                                      right:
-                                          getResponsiveHorizontalPadding(
-                                            width,
-                                          ) *
-                                          0.9,
-                                      top:
-                                          getResponsiveHorizontalPadding(
-                                            width,
-                                          ) *
-                                          0.75,
-                                      child: Container(
-                                        width:
-                                            getResponsiveHorizontalPadding(
-                                              width,
-                                            ) *
-                                            0.5,
-                                        height:
-                                            getResponsiveHorizontalPadding(
-                                              width,
-                                            ) *
-                                            0.35,
-                                        decoration: const BoxDecoration(
-                                          color: Colors.red,
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                    ),
+                            // Right Section - All actions with smooth animations
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 500),
+                              curve: Curves.easeOutCubic,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  /// OWNER BUTTON
+                                  if (_userRole != 'admin' &&
+                                      (_hasAppliedForOwner || _isOwner)) ...[
+                                    if (_applicationStatus == 'approved' ||
+                                        _isOwner)
+                                      _buildOwnerButton(isMobile(width))
+                                    else if (_applicationStatus == 'pending')
+                                      _buildPendingButton(isMobile(width))
+                                    else if (_applicationStatus == 'rejected')
+                                      _buildRejectedButton(isMobile(width))
+                                    else if (_hasAppliedForOwner)
+                                      _buildAppliedButton(isMobile(width)),
                                   ],
-                                ),
 
-                                /// PROFILE AVATAR - Animated hide/show
-                                AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 600),
-                                  switchInCurve: Curves.easeOutCubic,
-                                  switchOutCurve: Curves.easeInCubic,
-                                  transitionBuilder: (child, animation) {
-                                    return ScaleTransition(
-                                      scale: animation,
-                                      child: FadeTransition(
-                                        opacity: animation,
-                                        child: child,
-                                      ),
-                                    );
-                                  },
-                                  child: _currentIndex != 4
-                                      ? GestureDetector(
-                                          key: const ValueKey('avatar'),
-                                          onTap: () {
-                                            setState(() {
-                                              _currentIndex = 4;
-                                            });
-                                            _fadeController.reset();
-                                            _slideController.reset();
-                                            _scaleController.reset();
-                                            _fadeController.forward();
-                                            _slideController.forward();
-                                            _scaleController.forward();
-                                          },
+                                  /// SMALL GAP (tight spacing)
+                                  SizedBox(
+                                    width: getResponsiveSpacing(width) * 0.15,
+                                  ),
+
+                                  /// NOTIFICATION ICON (reduced padding 🔥)
+                                  AnimatedOpacity(
+                                    duration: const Duration(milliseconds: 400),
+                                    opacity: 1.0,
+                                    child: Stack(
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.notifications_none_rounded,
+                                            color:
+                                                _navItems[_currentIndex].color,
+                                            size: iconSize * 0.8,
+                                          ),
+                                          onPressed: () {},
+                                        ),
+                                        Positioned(
+                                          right:
+                                              getResponsiveHorizontalPadding(
+                                                width,
+                                              ) *
+                                              0.9,
+                                          top:
+                                              getResponsiveHorizontalPadding(
+                                                width,
+                                              ) *
+                                              0.75,
                                           child: Container(
-                                            decoration: BoxDecoration(
+                                            width:
+                                                getResponsiveHorizontalPadding(
+                                                  width,
+                                                ) *
+                                                0.5,
+                                            height:
+                                                getResponsiveHorizontalPadding(
+                                                  width,
+                                                ) *
+                                                0.35,
+                                            decoration: const BoxDecoration(
+                                              color: Colors.red,
                                               shape: BoxShape.circle,
-                                              gradient: gradient,
-                                            ),
-                                            child: ValueListenableBuilder<String?>(
-                                              valueListenable:
-                                                  profileImageNotifier,
-                                              builder: (context, value, child) {
-                                                final imageUrl =
-                                                    value ?? _userPhotoUrl;
-                                                return CircleAvatar(
-                                                  radius: avatarSize / 2.5,
-                                                  backgroundColor:
-                                                      Colors.transparent,
-                                                  child: imageUrl.isNotEmpty
-                                                      ? ClipRRect(
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                avatarSize / 6,
-                                                              ),
-                                                          child: Image.network(
-                                                            imageUrl,
-                                                            fit: BoxFit.cover,
-                                                            width: avatarSize,
-                                                            height: avatarSize,
-                                                            errorBuilder:
-                                                                (
-                                                                  context,
-                                                                  error,
-                                                                  stackTrace,
-                                                                ) {
-                                                                  return Icon(
-                                                                    _isOwnerMode
-                                                                        ? Icons
-                                                                              .store
-                                                                        : _userRole ==
-                                                                              'admin'
-                                                                        ? Icons
-                                                                              .admin_panel_settings
-                                                                        : Icons
-                                                                              .person,
-                                                                    color: Colors
-                                                                        .white,
-                                                                    size:
-                                                                        avatarSize *
-                                                                        0.5,
-                                                                  );
-                                                                },
-                                                          ),
-                                                        )
-                                                      : Icon(
-                                                          _isOwnerMode
-                                                              ? Icons.store
-                                                              : _userRole ==
-                                                                    'admin'
-                                                              ? Icons
-                                                                    .admin_panel_settings
-                                                              : Icons.person,
-                                                          color: Colors.white,
-                                                          size:
-                                                              avatarSize * 0.5,
-                                                        ),
-                                                );
-                                              },
                                             ),
                                           ),
-                                        )
-                                      : const SizedBox(
-                                          key: ValueKey('empty'),
-                                          width: 0,
-                                          height: 0,
                                         ),
-                                ),
-                              ],
+                                      ],
+                                    ),
+                                  ),
+
+                                  /// VERY SMALL GAP
+                                  SizedBox(
+                                    width: getResponsiveSpacing(width) * 0.1,
+                                  ),
+
+                                  /// PROFILE AVATAR (tight + smooth)
+                                  AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 500),
+                                    switchInCurve: Curves.easeOutCubic,
+                                    switchOutCurve: Curves.easeInCubic,
+                                    transitionBuilder: (child, animation) {
+                                      return FadeTransition(
+                                        opacity: animation,
+                                        child: ScaleTransition(
+                                          scale: animation,
+                                          child: child,
+                                        ),
+                                      );
+                                    },
+                                    layoutBuilder:
+                                        (currentChild, previousChildren) {
+                                          return AnimatedContainer(
+                                            duration: const Duration(
+                                              milliseconds: 500,
+                                            ),
+                                            curve: Curves.easeOutCubic,
+                                            width: _currentIndex != 4
+                                                ? avatarSize // 🔥 removed +16 extra spacing
+                                                : 0,
+                                            child: currentChild,
+                                          );
+                                        },
+                                    child: _currentIndex != 4
+                                        ? GestureDetector(
+                                            key: const ValueKey('avatar'),
+                                            onTap: () {
+                                              setState(() {
+                                                _currentIndex = 4;
+                                              });
+                                              _fadeController.reset();
+                                              _slideController.reset();
+                                              _scaleController.reset();
+                                              _fadeController.forward();
+                                              _slideController.forward();
+                                              _scaleController.forward();
+                                            },
+                                            child: Container(
+                                              margin: EdgeInsets.only(
+                                                left:
+                                                    getResponsiveSpacing(
+                                                      width,
+                                                    ) *
+                                                    0.2, // 🔥 reduced
+                                              ),
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                gradient: gradient,
+                                              ),
+                                              child: ValueListenableBuilder<String?>(
+                                                valueListenable:
+                                                    profileImageNotifier,
+                                                builder: (context, value, child) {
+                                                  final imageUrl =
+                                                      value ?? _userPhotoUrl;
+                                                  return CircleAvatar(
+                                                    radius: avatarSize / 2.5,
+                                                    backgroundColor:
+                                                        Colors.transparent,
+                                                    child: imageUrl.isNotEmpty
+                                                        ? ClipRRect(
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  avatarSize /
+                                                                      6,
+                                                                ),
+                                                            child: Image.network(
+                                                              imageUrl,
+                                                              fit: BoxFit.cover,
+                                                              width: avatarSize,
+                                                              height:
+                                                                  avatarSize,
+                                                            ),
+                                                          )
+                                                        : Icon(
+                                                            _isOwnerMode
+                                                                ? Icons.store
+                                                                : _userRole ==
+                                                                      'admin'
+                                                                ? Icons
+                                                                      .admin_panel_settings
+                                                                : Icons.person,
+                                                            color: Colors.white,
+                                                            size:
+                                                                avatarSize *
+                                                                0.5,
+                                                          ),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          )
+                                        : const SizedBox(
+                                            key: ValueKey('empty'),
+                                            width: 0,
+                                            height: 0,
+                                          ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
